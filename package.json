@@ -1,0 +1,17 @@
+{
+  "name": "conute-bot",
+  "version": "1.0.0",
+  "description": "Conure Bot for Discord",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "nodemon --watch src --exec node src/index.ts"
+  },
+  "dependencies": {
+    "discord.js": "11.5.1",
+    "dotenv": "^8.2.0",
+    "typescript": "^3.8.3"
+  },
+  "devDependencies": {
+    "nodemon": "^1.18.4"
+  }
+}

@@ -1,10 +1,8 @@
-import Discord, { Message, TextChannel } from "discord.js";
+import Discord, { Message } from "discord.js";
 import dotenv from "dotenv";
 import commands from "./commands";
 
 dotenv.config();
-
-const allowed_channels = JSON.parse(process.env.ALLOW_LIST);
 
 const bot = new Discord.Client();
 
@@ -13,7 +11,7 @@ bot.on("ready", () => {
   bot.voice.connections.forEach(c => c.channel.leave())
 
   bot.guilds.cache.map((g) => {
-    if (process.env.NODE_ENV === "prodution")
+    if (process.env.NODE_ENV === "production")
       g.systemChannel.send(`Here I'm! Following the whistle of change..
 Do you want to know what I can do? Try to type **!help** or **!commands**`)
   })

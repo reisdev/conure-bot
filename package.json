@@ -4,7 +4,11 @@
   "description": "Conure Bot for Discord",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "nodemon"
+    "dev": "nodemon",
+    "build-ts": "tsc",
+    "postinstall": "npm run build-ts",
+    "start": "npm run serve",
+    "serve": "node dist/server.js"
   },
   "dependencies": {
     "@discordjs/opus": "^0.1.0",
@@ -25,5 +29,8 @@
     "@babel/preset-env": "^7.9.0",
     "@babel/preset-typescript": "^7.9.0",
     "nodemon": "^1.18.4"
+  },
+  "engines": {
+    "node": "12.2.0"
   }
 }

@@ -1,4 +1,4 @@
-import Discord, { Message } from "discord.js";
+import Discord, { Message, TextChannel } from "discord.js";
 import dotenv from "dotenv";
 import commands from "./commands";
 
@@ -14,7 +14,7 @@ bot.on("ready", () => {
 
   bot.guilds.map((g) => {
     if (process.env.NODE_ENV === "prodution")
-      g.systemChannel.send(`Here I'm! Following the whistle of change..
+      (g.systemChannel as TextChannel).send(`Here I'm! Following the whistle of change..
 Do you want to know what I can do? Try to type **!help** or **!commands**`)
   })
   process.stdin.resume();

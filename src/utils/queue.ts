@@ -78,7 +78,7 @@ export const playSong = async (bot: Client, msg: Message, song) => {
     queue.textChannel.send(`Now playing: **${song.title}**`);
     logger(bot, "song.play", null, `Playing song ${song.title}`)
     queue.connection
-        .play(await ytdl(song.url), { type: "opus" })
+        .play(await ytdl(song.url, { filter: "audioonly", highWaterMark: 1 << 25 }), { type: "opus" })
         .once("end", () => {
             queue.songs.shift();
             playSong(bot, msg, queue.songs[0]);

@@ -24,7 +24,13 @@ Do you want to know what I can do? Try to type **!help** or **!commands**`)
   process.stdin.resume();
 });
 
-process.on("exit", () => {
+process.on("beforeExit", () => {
+  bot.destroy();
+  console.log("Bot logged out successfully. Exiting process..");
+})
+
+process.on("SIGINT", () => {
+  bot.destroy();
   console.log("Bot logged out successfully. Exiting process..");
 })
 

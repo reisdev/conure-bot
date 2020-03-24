@@ -14,7 +14,7 @@ export default (bot: Client, msg: Message) => {
                     execute(bot, msg, song);
                 }
                 else {
-                    msg.channel.send("Sorry, I couldn't found the song that you asked.")
+                    msg.channel.send("Sorry, I couldn't find the song that you asked.")
                 }
             })
             return true;

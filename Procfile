@@ -1,1 +1,1 @@
-web: node dist/index.js
+worker: npm deploy

@@ -8,7 +8,7 @@ export default (bot: Client, command: string, member: GuildMember, description: 
         else {
             console.log(`[${bot.user.username}#${bot.user.discriminator} : ${command}]`)
         }
-        console.log(description)
+        if (description) console.log(description);
     }
     else {
         if (member) {

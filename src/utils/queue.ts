@@ -91,16 +91,19 @@ export const playSong = async (bot: Client, msg: Message, song) => {
 
 export const stopSong = async (bot: Client, msg: Message) => {
     let queue = serverQueues.get(msg.guild.id);
-    if (!queue) {
+    if (!queue || !queue.connection) {
         return msg.channel.send("There's no song playing for your current channel.");
     }
-    logger(bot, "song.stop", msg.member);
-    queue.connection.dispatcher.end();
+    else {
+        logger(bot, "song.stop", msg.member);
+        queue.connection.dispatcher.end();
+        serverQueues.delete(msg.guild.id);
+    }
 }
 
 export const skipSong = async (bot: Client, msg: Message) => {
     let queue = serverQueues.get(msg.guild.id);
-    if (queue === undefined || queue === null) {
+    if (!queue) {
         return msg.channel.send("There's no song playing for your current channel.");
     } else {
         if (!queue.songs || queue.songs.length === 0)

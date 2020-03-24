@@ -10,11 +10,11 @@ const bot = new Discord.Client();
 
 bot.on("ready", () => {
   console.log(`\nConnected as as ${bot.user.tag}! Mode: ${process.env.NODE_ENV}\n`);
-  bot.voiceConnections.forEach(c => c.channel.leave())
+  bot.voice.connections.forEach(c => c.channel.leave())
 
-  bot.guilds.map((g) => {
+  bot.guilds.cache.map((g) => {
     if (process.env.NODE_ENV === "prodution")
-      (g.systemChannel as TextChannel).send(`Here I'm! Following the whistle of change..
+      g.systemChannel.send(`Here I'm! Following the whistle of change..
 Do you want to know what I can do? Try to type **!help** or **!commands**`)
   })
   process.stdin.resume();

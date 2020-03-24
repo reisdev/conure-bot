@@ -47,17 +47,17 @@ const serverQueues: Map<string, ChannelQueue> = new Map();
 export const execute = async (bot: Client, msg: Message, song) => {
     let queue = serverQueues.get(msg.guild.id);
     if (!song) {
-        msg.member.voiceChannel.leave();
+        msg.member.voice.channel.leave();
         serverQueues.delete(msg.guild.id);
         return;
     }
     if (!queue) {
-        if (!msg.member.voiceChannel) {
+        if (!msg.member.voice.channel) {
             msg.channel.send("You need to join a channel to play a song.");
             return;
         }
-        const voice = await msg.member.voiceChannel.join();
-        queue = new ChannelQueue(msg.channel, msg.member.voiceChannelID, voice);
+        const voice = await msg.member.voice.channel.join();
+        queue = new ChannelQueue(msg.channel, msg.member.voice.channelID, voice);
         queue.songs.push(song);
         serverQueues.set(msg.guild.id, queue);
         playSong(bot, msg, song);
@@ -71,20 +71,20 @@ export const execute = async (bot: Client, msg: Message, song) => {
 export const playSong = async (bot: Client, msg: Message, song) => {
     const queue = serverQueues.get(msg.guild.id);
     if (!song) {
-        msg.member.voiceChannel.leave();
+        msg.member.voice.channel.leave();
         serverQueues.delete(msg.guild.id);
         return;
     }
     queue.textChannel.send(`Now playing: **${song.title}**`);
     logger(bot, "song.play", null, `Playing song ${song.title}`)
     queue.connection
-        .playOpusStream(await ytdl(song.url))
+        .play(await ytdl(song.url), { type: "opus" })
         .once("end", () => {
             queue.songs.shift();
             playSong(bot, msg, queue.songs[0]);
         }).on("error", (error) => {
             console.error(error)
-            msg.member.voiceChannel.leave();
+            msg.member.voice.channel.leave();
             queue.connection = null;
         });
 }

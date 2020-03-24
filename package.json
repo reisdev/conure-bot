@@ -4,14 +4,26 @@
   "description": "Conure Bot for Discord",
   "main": "src/index.ts",
   "scripts": {
-    "start": "nodemon --watch src --exec node src/index.ts"
+    "dev": "nodemon"
   },
   "dependencies": {
+    "@discordjs/opus": "^0.1.0",
+    "@types/node": "^13.9.3",
     "discord.js": "11.5.1",
     "dotenv": "^8.2.0",
-    "typescript": "^3.8.3"
+    "ffmpeg": "0.0.4",
+    "fluent-ffmpeg": "^2.1.2",
+    "moment": "^2.24.0",
+    "typescript": "^3.8.3",
+    "ytdl-core-discord": "^1.1.0",
+    "yt-search": "^1.1.2"
   },
   "devDependencies": {
+    "@babel/core": "^7.9.0",
+    "@babel/node": "^7.8.7",
+    "@babel/plugin-proposal-class-properties": "^7.8.3",
+    "@babel/preset-env": "^7.9.0",
+    "@babel/preset-typescript": "^7.9.0",
     "nodemon": "^1.18.4"
   }
 }

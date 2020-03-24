@@ -9,10 +9,7 @@ const allowed_channels = JSON.parse(process.env.ALLOW_LIST);
 const bot = new Discord.Client();
 
 bot.on("ready", () => {
-  console.log(`
-    Connected as as ${bot.user.tag}! Mode: ${process.env.NODE_ENV}
-    `);
-
+  console.log(`\nConnected as as ${bot.user.tag}! Mode: ${process.env.NODE_ENV}\n`);
   bot.voiceConnections.forEach(c => c.channel.leave())
 
   bot.guilds.map((g) => {

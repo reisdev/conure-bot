@@ -1,5 +1,6 @@
-import { Channel, VoiceChannel, VoiceConnection, Message } from "discord.js"
+import { Channel, VoiceConnection, Message, Client } from "discord.js"
 import ytdl from 'ytdl-core-discord';
+import logger from "./logger";
 
 class ChannelQueue {
     textChannel: Channel = null;
@@ -18,7 +19,7 @@ class ChannelQueue {
 
 const serverQueues: Map<string, ChannelQueue> = new Map();
 
-export const execute = async (msg: Message, song) => {
+export const execute = async (bot: Client, msg: Message, song) => {
     let queue = serverQueues.get(msg.guild.id);
     if (!song) {
         msg.member.voiceChannel.leave();
@@ -26,11 +27,15 @@ export const execute = async (msg: Message, song) => {
         return;
     }
     if (!queue) {
+        if (!msg.member.voiceChannel) {
+            msg.channel.send("You need to join a channel to play a song.");
+            return;
+        }
         const voice = await msg.member.voiceChannel.join();
         queue = new ChannelQueue(msg.channel, msg.member.voiceChannelID, voice);
         queue.songs.push(song);
         serverQueues.set(msg.guild.id, queue);
-        playSong(msg, song);
+        playSong(bot, msg, song);
     }
     else {
         queue.songs.push(song);
@@ -38,7 +43,7 @@ export const execute = async (msg: Message, song) => {
     }
 }
 
-export const playSong = async (msg: Message, song) => {
+export const playSong = async (bot: Client, msg: Message, song) => {
     const queue = serverQueues.get(msg.guild.id);
     if (!song) {
         msg.member.voiceChannel.leave();
@@ -46,22 +51,50 @@ export const playSong = async (msg: Message, song) => {
         return;
     }
     queue.textChannel.send(`Now playing: **${song.title}**`);
+    logger(bot, "song.play", null, `Playing song ${song.title}`)
     queue.connection
         .playOpusStream(await ytdl(song.url))
         .once("end", () => {
             queue.songs.shift();
-            playSong(msg, queue.songs[0]);
+            playSong(bot, msg, queue.songs[0]);
         }).on("error", (error) => {
             console.error(error)
             msg.member.voiceChannel.leave();
+            queue.connection = null;
         });
 }
 
-export const stopSong = async (msg: Message) => {
+export const stopSong = async (bot: Client, msg: Message) => {
     let queue = serverQueues.get(msg.guild.id);
     if (!queue) {
-        msg.channel.send("There's no song playing for your current channel");
-        return;
+        return msg.channel.send("There's no song playing for your current channel.");
     }
+    logger(bot, "song.stop", msg.member);
     queue.connection.dispatcher.end();
+}
+
+export const skipSong = async (bot: Client, msg: Message) => {
+    let queue = serverQueues.get(msg.guild.id);
+    if (!queue) {
+        return msg.channel.send("There's no song playing for your current channel.");
+    }
+    logger(bot, "song.skip", msg.member, `Skipping song ${queue.songs[0].title}`)
+    queue.connection.dispatcher.end();
+}
+
+export const pause = async (bot: Client, msg: Message) => {
+    let queue = serverQueues.get(msg.guild.id);
+    if (!queue) {
+        return msg.channel.send("There's no song to be paused");
+    }
+    queue.connection.dispatcher.pause();
+}
+
+export const resume = async (bot: Client, msg: Message) => {
+    let queue = serverQueues.get(msg.guild.id);
+    if (!queue) {
+        return msg.channel.send("There's no song to be resumed.");
+    }
+    logger(bot, "song.resume", msg.member, `Resuming song ${queue.songs[0]}`)
+    queue.connection.dispatcher.resume();
 }

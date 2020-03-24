@@ -1,1 +1,1 @@
-worker: npm deploy
+worker: npm run deploy

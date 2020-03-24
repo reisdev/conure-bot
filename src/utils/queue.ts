@@ -1,4 +1,4 @@
-import { Channel, VoiceConnection, Message, Client, TextChannel } from "discord.js"
+import { Channel, VoiceConnection, Message, Client, TextChannel, VoiceChannel } from "discord.js"
 import ytdl from 'ytdl-core-discord';
 import logger from "./logger";
 
@@ -47,24 +47,32 @@ const serverQueues: Map<string, ChannelQueue> = new Map();
 export const execute = async (bot: Client, msg: Message, song) => {
     let queue = serverQueues.get(msg.guild.id);
     if (!song) {
-        msg.member.voice.channel.leave();
-        serverQueues.delete(msg.guild.id);
-        return;
+        return cleanup(bot, msg);
     }
     if (!queue) {
         if (!msg.member.voice.channel) {
-            msg.channel.send("You need to join a channel to play a song.");
+            msg.channel.send(`You need to join the channel to play a song.`);
             return;
         }
-        const voice = await msg.member.voice.channel.join();
-        queue = new ChannelQueue(msg.channel, msg.member.voice.channelID, voice);
-        queue.songs.push(song);
-        serverQueues.set(msg.guild.id, queue);
-        playSong(bot, msg, song);
+        try {
+            const voice = await msg.member.voice.channel.join();
+            queue = new ChannelQueue(msg.channel, msg.member.voice.channelID, voice);
+            queue.songs.push(song);
+            serverQueues.set(msg.guild.id, queue);
+            playSong(bot, msg, song);
+        } catch (e) {
+            msg.channel.send("Uh.. sorry, I had a problem! Can you try again? Please!")
+        }
     }
     else {
+        const channel: VoiceChannel = bot.channels.cache.get(queue.voiceChannel) as VoiceChannel;
+        if (!msg.member.voice.channel || msg.member.voice.channel.id !== channel.id) {
+            msg.channel.send(`You need to join the voice channel <#${channel.id}> to play a song.`);
+            return;
+        }
         queue.songs.push(song);
         msg.channel.send(`Song **${song.title}** was added to the queue.`)
+        logger(bot, "song.enqueue", msg.member, `Adding song ${song.title} to ${msg.guild.name} queue`)
     }
 }
 
@@ -81,12 +89,11 @@ export const playSong = async (bot: Client, msg: Message, song) => {
         .play(await ytdl(song.url, { filter: "audioonly", highWaterMark: 1 << 25 }), { type: "opus" })
         .once("end", () => {
             queue.songs.shift();
+            if (queue.songs.length === 0)
+                return cleanup(bot, msg);
             playSong(bot, msg, queue.songs[0]);
         }).on("error", (error) => {
-            console.error(error)
-            msg.member.voice.channel.leave();
-            queue.connection = null;
-            serverQueues.delete(msg.guild.id);
+            cleanup(bot, msg);
         });
 }
 
@@ -97,10 +104,7 @@ export const stopSong = async (bot: Client, msg: Message) => {
     }
     else {
         logger(bot, "song.stop", msg.member);
-        serverQueues.delete(msg.guild.id);
-        if (queue.connection)
-            queue.connection.dispatcher.end();
-        msg.member.voice.channel.leave();
+        cleanup(bot, msg);
     }
 }
 
@@ -109,18 +113,19 @@ export const skipSong = async (bot: Client, msg: Message) => {
     if (!queue) {
         return msg.channel.send("There's no song playing for your current channel.");
     } else {
-        if (!queue.songs || queue.songs.length === 0)
-            try {
-                const song = queue.songs[0];
-                if (song !== undefined) {
-                    logger(bot, "song.skip", msg.member, `Skipping song ${song.title}`)
-                    msg.member.voice.channel.leave();
-                } else {
-                    throw Error("No song available");
-                }
-            } catch (e) {
-                return msg.channel.send("There's no song playing for your current channel.");
+        try {
+            const song = queue.songs[0];
+            if (song !== undefined) {
+                logger(bot, "song.skip", msg.member, `Skipping song ${song.title}`)
+                queue.songs.shift();
+                playSong(bot, msg, queue.songs[0]);
+            } else {
+                cleanup(bot, msg)
+                throw Error("No song available");
             }
+        } catch (e) {
+            return msg.channel.send("There's no song playing for your current channel.");
+        }
     }
 }
 
@@ -157,4 +162,12 @@ export const volume = async (bot: Client, msg: Message) => {
     catch (err) {
         msg.channel.send("The volume should be an integer between 0 and 10. e.g.: !vol 5")
     }
+}
+
+const cleanup = async (bot: Client, msg: Message) => {
+    const queue = serverQueues.get(msg.guild.id);
+    if (queue.connection)
+        queue.connection.dispatcher.end();
+    serverQueues.delete(msg.guild.id);
+    msg.member.voice.channel.leave();
 }

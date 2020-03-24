@@ -9,7 +9,6 @@ const bot = new Discord.Client();
 
 bot.on("ready", () => {
   console.log(`Connected as as ${bot.user.tag}! Mode: ${process.env.NODE_ENV}\n`);
-  bot.voice.connections.forEach(c => c.channel.leave())
 
   bot.guilds.cache.map((g) => {
     if (process.env.NODE_ENV === "production") {
@@ -41,7 +40,7 @@ bot.on("message", async (msg: Message) => {
 });
 
 bot.on("guildMemberAdd", (member) => {
-  console.log(member)
+  member.guild.systemChannel.send(`Welcome aboard, <@${member.id}>!`)
 })
 
 bot.login(process.env.AUTH_TOKEN)

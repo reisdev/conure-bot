@@ -12,10 +12,11 @@ Available commands:
 **Music**:
 \`\`\`md
 !p <song name or url> : Search and play the song
+!resume : resume the current song
+!pause : pause the current song
 !stop : Stop all playing songs
 !skip : Skip the current song
-!pause : pause the current song
-!resume : resume the current song
+!vol or !volume <integer 0-10>: Set the song volume
 \`\`\`
 `
 

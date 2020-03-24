@@ -96,8 +96,10 @@ export const stopSong = async (bot: Client, msg: Message) => {
     }
     else {
         logger(bot, "song.stop", msg.member);
-        queue.connection.dispatcher.end();
         serverQueues.delete(msg.guild.id);
+        if (queue.connection)
+            queue.connection.dispatcher.end();
+        msg.member.voice.channel.leave();
     }
 }
 
@@ -121,7 +123,6 @@ export const skipSong = async (bot: Client, msg: Message) => {
     }
 }
 
-
 export const pause = async (bot: Client, msg: Message) => {
     let queue = serverQueues.get(msg.guild.id);
     if (!queue) {
@@ -137,4 +138,20 @@ export const resume = async (bot: Client, msg: Message) => {
     }
     logger(bot, "song.resume", msg.member, `Resuming song ${queue.songs[0]}`)
     queue.connection.dispatcher.resume();
+}
+
+export const volume = async (bot: Client, msg: Message) => {
+    const queue = serverQueues.get(msg.guild.id);
+    if (!queue) {
+        return msg.channel.send("The bot needs to be playing to adjust the volume");
+    }
+    try {
+        const volume = Number(msg.content.split(" ")[1])
+        if (volume < 0 || volume > 10) throw new Error("Invalid number");
+        queue.connection.dispatcher.setVolume(volume / 10)
+        logger(bot, "song.volume", msg.member, `Setting volume to ${volume / 10}`)
+    }
+    catch (err) {
+        msg.channel.send("The volume should be an integer between 0 and 10. e.g.: !vol 5")
+    }
 }

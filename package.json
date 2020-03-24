@@ -2,12 +2,12 @@
   "name": "conute-bot",
   "version": "1.0.0",
   "description": "Conure Bot for Discord",
-  "main": "src/index.ts",
+  "main": "dist/index.ts",
   "scripts": {
     "dev": "nodemon",
     "build": "tsc",
     "start": "npm run serve",
-    "serve": "node dist/server.js"
+    "serve": "node dist/index.js"
   },
   "dependencies": {
     "@discordjs/opus": "^0.1.0",

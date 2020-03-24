@@ -1,19 +1,44 @@
-import { Channel, VoiceConnection, Message, Client } from "discord.js"
+import { Channel, VoiceConnection, Message, Client, TextChannel } from "discord.js"
 import ytdl from 'ytdl-core-discord';
 import logger from "./logger";
 
 class ChannelQueue {
-    textChannel: Channel = null;
+    textChannel: TextChannel = null;
     voiceChannel: string = null;
     connection: VoiceConnection = null;
-    songs: [];
+    songs: Array<Song>;
     volume: number = 5;
     playing: Boolean = true;
-    constructor(text: Channel, voice: string, conn: VoiceConnection) {
+    constructor(text: any, voice: string, conn: VoiceConnection) {
         this.textChannel = text;
         this.voiceChannel = voice;
         this.connection = conn;
         this.songs = [];
+    }
+}
+
+export class Song {
+    type: string
+    title: string
+    description: string
+    videoId: string
+    seconds: number
+    timestamp: string
+    duration: { toString: any, seconds: number, timestamp: string }
+    views: number
+    thumbnail: string
+    image: string
+    ago: string
+    author: {
+        name: string,
+        id: string,
+        url: string,
+        userId: string,
+        userName: string,
+        userUrl: string,
+        channelId: string,
+        channelUrl: string,
+        channelName: string
     }
 }
 
@@ -31,6 +56,7 @@ export const execute = async (bot: Client, msg: Message, song) => {
             msg.channel.send("You need to join a channel to play a song.");
             return;
         }
+        console.log(song);
         const voice = await msg.member.voiceChannel.join();
         queue = new ChannelQueue(msg.channel, msg.member.voiceChannelID, voice);
         queue.songs.push(song);
@@ -75,12 +101,24 @@ export const stopSong = async (bot: Client, msg: Message) => {
 
 export const skipSong = async (bot: Client, msg: Message) => {
     let queue = serverQueues.get(msg.guild.id);
-    if (!queue) {
+    if (queue === undefined || queue === null) {
         return msg.channel.send("There's no song playing for your current channel.");
+    } else {
+        if (!queue.songs || queue.songs.length === 0)
+            try {
+                const song = queue.songs[0];
+                if (song !== undefined) {
+                    logger(bot, "song.skip", msg.member, `Skipping song ${song.title}`)
+                    queue.connection.dispatcher.end();
+                } else {
+                    throw Error("No song available");
+                }
+            } catch (e) {
+                return msg.channel.send("There's no song playing for your current channel.");
+            }
     }
-    logger(bot, "song.skip", msg.member, `Skipping song ${queue.songs[0].title}`)
-    queue.connection.dispatcher.end();
 }
+
 
 export const pause = async (bot: Client, msg: Message) => {
     let queue = serverQueues.get(msg.guild.id);

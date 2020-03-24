@@ -1,7 +1,7 @@
 import yts from "yt-search";
 import { Message, Client } from 'discord.js';
 
-import { execute, stopSong, pause, resume, skipSong } from "../utils/queue"
+import { execute, stopSong, pause, resume, skipSong, Song } from "../utils/queue"
 
 export default (bot: Client, msg: Message) => {
     const command = msg.content.split(" ")[0];
@@ -9,9 +9,12 @@ export default (bot: Client, msg: Message) => {
     switch (command) {
         case `${process.env.PREFIX}p`:
             yts(content, async (err, r) => {
-                if (r.videos.length > 0) {
-                    const song = r.videos[0];
+                if (r.videos && r.videos.length > 0) {
+                    const song: Song[] = r.videos[0];
                     execute(bot, msg, song);
+                }
+                else {
+                    msg.channel.send("Sorry, I couldn't found the song that you asked.")
                 }
             })
             return true;

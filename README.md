@@ -17,5 +17,5 @@ $ npm install
 To get the bot running, execute the script `start`:
 
 ```bash
-npm dev
+npm run dev
 ```

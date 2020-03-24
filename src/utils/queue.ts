@@ -86,6 +86,7 @@ export const playSong = async (bot: Client, msg: Message, song) => {
             console.error(error)
             msg.member.voice.channel.leave();
             queue.connection = null;
+            serverQueues.delete(msg.guild.id);
         });
 }
 
@@ -113,7 +114,7 @@ export const skipSong = async (bot: Client, msg: Message) => {
                 const song = queue.songs[0];
                 if (song !== undefined) {
                     logger(bot, "song.skip", msg.member, `Skipping song ${song.title}`)
-                    queue.connection.dispatcher.end();
+                    msg.member.voice.channel.leave();
                 } else {
                     throw Error("No song available");
                 }
@@ -128,7 +129,8 @@ export const pause = async (bot: Client, msg: Message) => {
     if (!queue) {
         return msg.channel.send("There's no song to be paused");
     }
-    queue.connection.dispatcher.pause();
+    if (queue.connection)
+        queue.connection.dispatcher.pause();
 }
 
 export const resume = async (bot: Client, msg: Message) => {
@@ -137,7 +139,8 @@ export const resume = async (bot: Client, msg: Message) => {
         return msg.channel.send("There's no song to be resumed.");
     }
     logger(bot, "song.resume", msg.member, `Resuming song ${queue.songs[0]}`)
-    queue.connection.dispatcher.resume();
+    if (queue.connection)
+        queue.connection.dispatcher.resume();
 }
 
 export const volume = async (bot: Client, msg: Message) => {

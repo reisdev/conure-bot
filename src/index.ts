@@ -1,6 +1,7 @@
 import Discord, { Message } from "discord.js";
 import dotenv from "dotenv";
 import commands from "./commands";
+import logger from "./utils/logger";
 
 dotenv.config();
 
@@ -11,9 +12,14 @@ bot.on("ready", () => {
   bot.voice.connections.forEach(c => c.channel.leave())
 
   bot.guilds.cache.map((g) => {
-    if (process.env.NODE_ENV === "production")
-      g.systemChannel.send(`Here I'm! Following the whistle of change..
+    if (process.env.NODE_ENV === "production") {
+      try {
+        g.systemChannel.send(`Here I'm! Following the whistle of change..
 Do you want to know what I can do? Try to type **!help** or **!commands**`)
+      } catch (e) {
+        logger(bot, "startup", null, "Missing message permission for System Channel")
+      }
+    }
   })
   process.stdin.resume();
 });

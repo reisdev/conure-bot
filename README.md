@@ -51,4 +51,5 @@ Available commands:
 !log: console.log the msg
 !rs or !restart: Restart the bot service
 !rollback: Delete all the commands call and bot messages
+!vol or !vol <integer 0-10> : Set the song volume
 ```

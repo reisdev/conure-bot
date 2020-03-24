@@ -8,7 +8,7 @@ dotenv.config();
 const bot = new Discord.Client();
 
 bot.on("ready", () => {
-  console.log(`\nConnected as as ${bot.user.tag}! Mode: ${process.env.NODE_ENV}\n`);
+  console.log(`Connected as as ${bot.user.tag}! Mode: ${process.env.NODE_ENV}\n`);
   bot.voice.connections.forEach(c => c.channel.leave())
 
   bot.guilds.cache.map((g) => {

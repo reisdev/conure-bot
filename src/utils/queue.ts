@@ -56,7 +56,6 @@ export const execute = async (bot: Client, msg: Message, song) => {
             msg.channel.send("You need to join a channel to play a song.");
             return;
         }
-        console.log(song);
         const voice = await msg.member.voiceChannel.join();
         queue = new ChannelQueue(msg.channel, msg.member.voiceChannelID, voice);
         queue.songs.push(song);

@@ -5,8 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "nodemon",
-    "build-ts": "tsc",
-    "postinstall": "npm run build-ts",
+    "build": "tsc",
     "start": "npm run serve",
     "serve": "node dist/server.js"
   },

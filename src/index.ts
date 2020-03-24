@@ -14,7 +14,7 @@ bot.on("ready", () => {
   bot.guilds.cache.map((g) => {
     if (process.env.NODE_ENV === "production") {
       try {
-        g.systemChannel.send(`Here I'm! Following the whistle of change..
+        g.systemChannel.send(`Here I am! Following the whistle of change..
 Do you want to know what I can do? Try to type **!help** or **!commands**`)
       } catch (e) {
         logger(bot, "startup", null, "Missing message permission for System Channel")

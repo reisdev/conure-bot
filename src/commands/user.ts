@@ -1,5 +1,5 @@
 import moment from 'moment'
-import Discord, { Client, Message } from "discord.js";
+import { Client, Message } from "discord.js";
 
 export default (bot: Client, msg: Message) => {
     switch (msg.content.trim()) {

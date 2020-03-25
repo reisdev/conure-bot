@@ -28,15 +28,16 @@ bot.on("error", (err) => {
   logger(bot, "error", null, err);
 })
 
-process.on("beforeExit", () => {
+const closeBot = () => {
   bot.destroy();
   console.log("Bot logged out successfully. Exiting process..");
-})
+}
 
-process.on("SIGINT", () => {
-  bot.destroy();
-  console.log("Bot logged out successfully. Exiting process..");
-})
+process.on("beforeExit", closeBot)
+
+process.on("SIGINT", closeBot)
+
+process.on("SIGTERM", closeBot)
 
 bot.on("message", async (msg: Message) => {
   if (!msg.content.startsWith(`${process.env.PREFIX}`)) return;

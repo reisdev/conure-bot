@@ -1,4 +1,5 @@
 import yts from "yt-search";
+import ytdl from "ytdl-core-discord";
 import { Message, Client } from 'discord.js';
 
 import { execute, stopSong, pause, resume, skipSong, Song, volume } from "../utils/queue"
@@ -9,14 +10,35 @@ export default (bot: Client, msg: Message) => {
     const content = msg.content.split(" ").slice(1).join(" ");
     switch (command) {
         case `${process.env.PREFIX}p`:
-            yts(content, async (err, r) => {
+            if (content.startsWith("http")) {
+                ytdl.getInfo(content).then((r) => {
+                    const song = new Song();
+                    song.title = r.title;
+                    song.url = r.video_url;
+                    song.videoId = r.video_id;
+                    song.seconds = Number(r.length_seconds);
+                    song.description = r.description;
+                    song.author = {
+                        id: r.author.id,
+                        url: r.author.user_url,
+                        channelId: r.author.id,
+                        name: r.author.name,
+                        channelUrl: r.author.channel_url,
+                        userId: r.author.id,
+                        userUrl: r.author.user_url,
+                        userName: r.author.user,
+                        channelName: r.author.user
+                    }
+                    execute(bot, msg, song)
+                })
+            }
+            else yts(content, async (err, r) => {
                 if (err) {
                     msg.channel.send("Sorry, I had a problem to search your music! Trying again later...")
                     return logger(bot, "song.play", msg.member, err)
                 }
                 if (r.videos && r.videos.length > 0) {
                     let song: Song = r.videos.shift();
-                    while (song && song.duration.seconds > 600) song = r.videos.shift();
                     execute(bot, msg, song);
                 }
                 else {

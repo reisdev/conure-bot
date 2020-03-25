@@ -2,6 +2,7 @@ import Discord, { Message } from "discord.js";
 import dotenv from "dotenv";
 import commands from "./commands";
 import logger from "./utils/logger";
+import { serverQueues } from './utils/queue'
 
 dotenv.config();
 
@@ -9,7 +10,7 @@ const bot = new Discord.Client();
 
 bot.on("ready", () => {
   console.log(`Connected as as ${bot.user.tag}! Mode: ${process.env.NODE_ENV}\n`);
-
+  serverQueues.clear()
   bot.guilds.cache.map((g) => {
     if (process.env.NODE_ENV === "production") {
       try {

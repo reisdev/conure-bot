@@ -42,7 +42,7 @@ export class Song {
     }
 }
 
-const serverQueues: Map<string, ChannelQueue> = new Map();
+export const serverQueues: Map<string, ChannelQueue> = new Map();
 
 export const execute = async (bot: Client, msg: Message, song) => {
     let queue = serverQueues.get(msg.guild.id);

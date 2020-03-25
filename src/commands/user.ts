@@ -13,10 +13,10 @@ export default (bot: Client, msg: Message) => {
                     },
                     title: msg.member.nickname || msg.author.username,
                     thumbnail: {
-                        url: `https://cdn.discordapp.com/avatars/${msg.author.id}/${msg.author.avatar}.png`
+                        url: "https://cdn.discordapp.com/" + (msg.author.avatar !== null ? `avatars/${msg.author.id}/${msg.author.avatar}.png` : `embed/avatars/${Number(msg.author.discriminator) % 5}.png `)
                     },
                     description: `Congratulations! You are a member of this server since ${since}.`,
-                    timestamp: true
+                    timestamp: new Date()
                 }
             });
             return true;

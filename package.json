@@ -16,7 +16,6 @@
     "ffmpeg": "0.0.4",
     "fluent-ffmpeg": "^2.1.2",
     "moment": "^2.24.0",
-    "prism-media": "github:hydrabolt/prism-media",
     "typescript": "^3.8.3",
     "yt-search": "^1.1.2",
     "ytdl-core-discord": "^1.1.0"

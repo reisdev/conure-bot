@@ -85,9 +85,9 @@ export const playSong = async (bot: Client, msg: Message, song) => {
     }
     queue.textChannel.send(`Now playing: **${song.title}**`);
     logger(bot, "song.play", null, `Playing song ${song.title}`)
-    const stream = ytdl(song.url, { filter: "audioonly", highWaterMark: 1 });
+    const stream = ytdl(song.url, { filter: "audioonly", highWaterMark: 1 << 22 });
     const dispatcher = queue.connection
-        .play(await stream, { type: "opus" });
+        .play(await stream, { type: "opus", highWaterMark: 1 });
     dispatcher.on("end", () => {
         cleanup(bot, msg);
     })

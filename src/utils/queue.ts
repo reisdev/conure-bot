@@ -87,7 +87,7 @@ export const playSong = async (bot: Client, msg: Message, song) => {
     logger(bot, "song.play", null, `Playing song ${song.title}`)
     queue.connection
         .play(await ytdl(song.url, { filter: "audioonly", highWaterMark: 1 << 25 }), { type: "opus" })
-        .once("end", () => {
+        .on("end", () => {
             queue.songs.shift();
             if (queue.songs.length === 0)
                 return cleanup(bot, msg);

@@ -2,6 +2,7 @@ import yts from "yt-search";
 import { Message, Client } from 'discord.js';
 
 import { execute, stopSong, pause, resume, skipSong, Song, volume } from "../utils/queue"
+import logger from "../utils/logger";
 
 export default (bot: Client, msg: Message) => {
     const command = msg.content.split(" ")[0];
@@ -9,8 +10,13 @@ export default (bot: Client, msg: Message) => {
     switch (command) {
         case `${process.env.PREFIX}p`:
             yts(content, async (err, r) => {
+                if (err) {
+                    msg.channel.send("Sorry, I had a problem to search your music! Trying again later...")
+                    return logger(bot, "song.play", msg.member, err)
+                }
                 if (r.videos && r.videos.length > 0) {
-                    const song: Song[] = r.videos[0];
+                    let song: Song = r.videos.shift();
+                    while (song && song.duration.seconds > 600) song = r.videos.shift();
                     execute(bot, msg, song);
                 }
                 else {

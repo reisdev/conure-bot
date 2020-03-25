@@ -24,6 +24,10 @@ Do you want to know what I can do? Try to type **!help** or **!commands**`)
   process.stdin.resume();
 });
 
+bot.on("error", (err) => {
+  logger(bot, "error", null, err);
+})
+
 process.on("beforeExit", () => {
   bot.destroy();
   console.log("Bot logged out successfully. Exiting process..");

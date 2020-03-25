@@ -85,16 +85,20 @@ export const playSong = async (bot: Client, msg: Message, song) => {
     }
     queue.textChannel.send(`Now playing: **${song.title}**`);
     logger(bot, "song.play", null, `Playing song ${song.title}`)
-    queue.connection
-        .play(await ytdl(song.url, { filter: "audioonly", highWaterMark: 1 << 25 }), { type: "opus" })
-        .on("end", () => {
-            queue.songs.shift();
-            if (queue.songs.length === 0)
-                return cleanup(bot, msg);
-            playSong(bot, msg, queue.songs[0]);
-        }).on("error", (error) => {
-            cleanup(bot, msg);
-        });
+    const stream = ytdl(song.url, { filter: "audioonly", highWaterMark: 1 << 25 });
+    const dispatcher = queue.connection
+        .play(await stream, { type: "opus" });
+    dispatcher.on("end", () => {
+        cleanup(bot, msg);
+    })
+    dispatcher.on("finish", () => {
+        queue.songs.shift();
+        if (queue.songs.length === 0) return cleanup(bot, msg);
+        playSong(bot, msg, queue.songs[0]);
+    })
+    dispatcher.on("error", (error) => {
+        logger(bot, "song.play", null, error);
+    });
 }
 
 export const stopSong = async (bot: Client, msg: Message) => {
@@ -134,7 +138,7 @@ export const pause = async (bot: Client, msg: Message) => {
     if (!queue) {
         return msg.channel.send("There's no song to be paused");
     }
-    if (queue.connection)
+    if (queue.connection && queue.connection.dispatcher)
         queue.connection.dispatcher.pause();
 }
 
@@ -144,7 +148,7 @@ export const resume = async (bot: Client, msg: Message) => {
         return msg.channel.send("There's no song to be resumed.");
     }
     logger(bot, "song.resume", msg.member, `Resuming song ${queue.songs[0]}`)
-    if (queue.connection)
+    if (queue.connection && queue.connection.dispatcher)
         queue.connection.dispatcher.resume();
 }
 
@@ -166,7 +170,7 @@ export const volume = async (bot: Client, msg: Message) => {
 
 const cleanup = async (bot: Client, msg: Message) => {
     const queue = serverQueues.get(msg.guild.id);
-    if (queue.connection)
+    if (queue.connection.dispatcher)
         queue.connection.dispatcher.end();
     serverQueues.delete(msg.guild.id);
     msg.member.voice.channel.leave();

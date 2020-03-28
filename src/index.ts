@@ -8,6 +8,17 @@ dotenv.config();
 
 const bot = new Discord.Client();
 
+const closeBot = () => {
+  bot.destroy();
+  console.log("Bot logged out successfully. Exiting process..");
+}
+
+process.on("beforeExit", closeBot)
+
+process.on("SIGINT", closeBot)
+
+process.on("SIGTERM", closeBot)
+
 bot.on("ready", () => {
   console.log(`Connected as as ${bot.user.tag}! Mode: ${process.env.NODE_ENV}\n`);
   serverQueues.clear()
@@ -27,17 +38,6 @@ Do you want to know what I can do? Try to type **!help** or **!commands**`)
 bot.on("error", (err) => {
   logger(bot, "error", null, err);
 })
-
-const closeBot = () => {
-  bot.destroy();
-  console.log("Bot logged out successfully. Exiting process..");
-}
-
-process.on("beforeExit", closeBot)
-
-process.on("SIGINT", closeBot)
-
-process.on("SIGTERM", closeBot)
 
 bot.on("message", async (msg: Message) => {
   if (!msg.content.startsWith(`${process.env.PREFIX}`)) return;

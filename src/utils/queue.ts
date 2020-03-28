@@ -57,7 +57,6 @@ export const execute = async (bot: Client, msg: Message, song) => {
         }
         try {
             createQueue(bot, msg, song).then((queue) => {
-                console.log(queue)
                 playSong(bot, msg, song);
             })
         } catch (e) {

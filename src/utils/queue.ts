@@ -7,7 +7,7 @@ class ChannelQueue {
     voiceChannel: string = null;
     connection: VoiceConnection = null;
     songs: Array<Song>;
-    volume: number = 5;
+    volume: number = 0.5;
     playing: Boolean = true;
     constructor(text: any, voice: string, conn: VoiceConnection) {
         this.textChannel = text;
@@ -70,32 +70,64 @@ export const execute = async (bot: Client, msg: Message, song) => {
             return;
         }
         queue.songs.push(song);
-        msg.channel.send(`Song **${song.title}** was added to the queue.`)
+        queue.textChannel.send({
+            embed: {
+                title: song.title,
+                url: song.url,
+                timestamp: Date.now(),
+                thumbnail: {
+                    url: song.thumbnail
+                },
+                author: {
+                    name: "Added to Queue",
+                    icon_url: `https://cdn.discordapp.com/avatars/${bot.user.id}/${bot.user.avatar}.png`
+                },
+                fields: [
+                    { name: "Channel", value: song.author.name, inline: true },
+                    { name: "Duration", value: song.timestamp, inline: true }
+                ]
+            }
+        })
         logger(bot, "song.enqueue", msg.member, `Adding song ${song.title} to ${msg.guild.name} queue`)
     }
 }
 
-export const playSong = async (bot: Client, msg: Message, song) => {
+export const playSong = async (bot: Client, msg: Message, song: Song) => {
     let queue = serverQueues.get(msg.guild.id);
-    if (!song) {
-        msg.member.voice.channel.leave();
-        serverQueues.delete(msg.guild.id);
-        return;
-    }
+    if (!song) return cleanupQueue(bot, msg);
     if (!queue) queue = await createQueue(bot, msg, song);
-    queue.textChannel.send(`Now playing: **${song.title}**`);
-    logger(bot, "song.play", null, `Playing song ${song.title}`)
-    const stream = await ytdl(song.url, { filter: "audioonly", highWaterMark: 1 << 22 });
-    const dispatcher = queue.connection
-        .play(stream, { type: "opus", highWaterMark: 1 });
-    dispatcher.setVolume(queue.volume);
-    dispatcher.on("finish", () => {
-        queue.songs.shift();
-        if (queue.songs.length === 0) return cleanupQueue(bot, msg);
-        playSong(bot, msg, queue.songs[0]);
-    })
-    dispatcher.on("error", (error) => {
-        logger(bot, "song.play", null, error);
+    ytdl(song.url, { filter: "audioonly", quality: "highestaudio", highWaterMark: 1 << 2 }).then(stream => {
+        const dispatcher = queue.connection.play(stream, { type: "opus", highWaterMark: 1 });
+        dispatcher.setVolumeLogarithmic(queue.volume);
+        dispatcher.on("finish", () => {
+            queue.songs.shift();
+            playSong(bot, msg, queue.songs[0]);
+        })
+        dispatcher.on("start", () => {
+            logger(bot, "song.play", null, `Playing song ${song.title}`)
+            queue.textChannel.send({
+                embed: {
+                    title: song.title,
+                    url: song.url,
+                    timestamp: Date.now(),
+                    thumbnail: {
+                        url: song.thumbnail
+                    },
+                    author: {
+                        name: "Now Playing",
+                        icon_url: `https://cdn.discordapp.com/avatars/${bot.user.id}/${bot.user.avatar}.png`
+                    },
+                    fields: [
+                        { name: "Channel", value: song.author.name, inline: true },
+                        { name: "Duration", value: song.timestamp, inline: true }
+                    ]
+                }
+            })
+        })
+        dispatcher.on("error", (error) => {
+            logger(bot, "song.play", null, error);
+            queue.connection.disconnect();
+        });
     });
 }
 
@@ -106,7 +138,8 @@ export const stopSong = async (bot: Client, msg: Message) => {
     }
     else {
         logger(bot, "song.stop", msg.member);
-        cleanupQueue(bot, msg);
+        if (queue.connection && queue.connection.dispatcher)
+            queue.connection.dispatcher.end();
     }
 }
 
@@ -156,11 +189,12 @@ export const volume = async (bot: Client, msg: Message) => {
         return msg.channel.send("The bot needs to be playing to adjust the volume");
     }
     try {
-        const volume = Number(msg.content.split(" ")[1])
+        const volume = Number(msg.content.split(" ")[1]) / 10;
         if (volume < 0 || volume > 10) throw new Error("Invalid number");
-        queue.connection.dispatcher.setVolume(volume / 10)
-        queue.volume = volume / 10;
-        logger(bot, "song.volume", msg.member, `Setting volume to ${volume / 10}`)
+        queue.connection.dispatcher.setVolume(volume)
+        queue.volume = volume;
+        serverQueues.set(msg.guild.id, queue);
+        logger(bot, "song.volume", msg.member, `Setting volume to ${volume}`)
     }
     catch (err) {
         msg.channel.send("The volume should be an integer between 0 and 10. e.g.: !vol 5")
@@ -172,10 +206,11 @@ const cleanupQueue = async (bot: Client, msg: Message) => {
     if (!queue) {
         return msg.channel.send("Sorry, there's no queue to be cleaned.");
     }
-    if (queue.connection && queue.connection.dispatcher)
+    if (queue.connection && queue.connection.dispatcher) {
         queue.connection.dispatcher.end();
+        queue.connection.channel.leave();
+    }
     serverQueues.delete(msg.guild.id);
-    msg.member.voice.channel.leave();
 }
 
 const createQueue = async (bot: Client, msg: Message, song: Song) => {

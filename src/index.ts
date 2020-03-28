@@ -10,6 +10,10 @@ const bot = new Discord.Client();
 
 const closeBot = () => {
   bot.destroy();
+  serverQueues.forEach(queue => {
+    if (queue.connection)
+      queue.connection.disconnect()
+  })
   console.log("Bot logged out successfully. Exiting process..");
 }
 

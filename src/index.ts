@@ -25,6 +25,13 @@ process.on("SIGTERM", closeBot)
 
 bot.on("ready", () => {
   console.log(`Connected as as ${bot.user.tag}! Mode: ${process.env.NODE_ENV}\n`);
+  Object.defineProperty(Array.prototype, 'flat', {
+    value: function (depth = 1) {
+      return this.reduce(function (flat, toFlatten) {
+        return flat.concat((Array.isArray(toFlatten) && (depth > 1)) ? toFlatten["flat"](depth - 1) : toFlatten);
+      }, []);
+    }
+  });
   serverQueues.clear()
   bot.guilds.cache.map((g) => {
     if (process.env.NODE_ENV === "production") {

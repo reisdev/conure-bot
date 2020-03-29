@@ -73,6 +73,7 @@ export const execute = async (bot: Client, msg: Message, song) => {
         queue.textChannel.send({
             embed: {
                 title: song.title,
+                description: `Channel: ${song.author.name} Duration: ${song.timestamp} Position: ${queue.songs.length}`,
                 url: song.url,
                 timestamp: Date.now(),
                 thumbnail: {
@@ -81,11 +82,7 @@ export const execute = async (bot: Client, msg: Message, song) => {
                 author: {
                     name: "Added to Queue",
                     icon_url: `https://cdn.discordapp.com/avatars/${bot.user.id}/${bot.user.avatar}.png`
-                },
-                fields: [
-                    { name: "Channel", value: song.author.name, inline: true },
-                    { name: "Duration", value: song.timestamp, inline: true }
-                ]
+                }
             }
         })
         logger(bot, "song.enqueue", msg.member, `Adding song ${song.title} to ${msg.guild.name} queue`)

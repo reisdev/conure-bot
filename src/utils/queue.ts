@@ -73,7 +73,7 @@ export const execute = async (bot: Client, msg: Message, song) => {
         queue.textChannel.send({
             embed: {
                 title: song.title,
-                description: `**Channel:** ${song.author.name} **|** **Duration:** ${song.timestamp} **|** **Position:** ${queue.songs.length}`,
+                description: `**Channel:** ${song.author.name}\n**Duration:** ${song.timestamp}\n**Position:** ${queue.songs.length}`,
                 url: song.url,
                 timestamp: Date.now(),
                 thumbnail: {
@@ -197,7 +197,7 @@ export const playSong = async (bot: Client, msg: Message, song: Song) => {
             queue.textChannel.send({
                 embed: {
                     title: song.title,
-                    description: `**Channel:** ${song.author.name} **|** **Duration:** ${song.timestamp} **|** **Position:** ${queue.songs.length}`,
+                    description: `**Channel:** ${song.author.name}\n**Duration:** ${song.timestamp}\n`,
                     url: song.url,
                     timestamp: Date.now(),
                     thumbnail: {

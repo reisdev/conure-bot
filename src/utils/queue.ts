@@ -1,5 +1,7 @@
-import { Channel, VoiceConnection, Message, Client, TextChannel, VoiceChannel } from "discord.js"
+import { VoiceConnection, Message, Client, TextChannel, VoiceChannel } from "discord.js"
+
 import ytdl from 'ytdl-core-discord';
+import yts from "yt-search";
 import logger from "./logger";
 
 class ChannelQueue {
@@ -9,7 +11,7 @@ class ChannelQueue {
     songs: Array<Song>;
     volume: number = 0.5;
     playing: Boolean = true;
-    constructor(text: any, voice: string, conn: VoiceConnection) {
+    constructor(text: TextChannel, voice: string, conn: VoiceConnection) {
         this.textChannel = text;
         this.voiceChannel = voice;
         this.connection = conn;
@@ -52,8 +54,7 @@ export const execute = async (bot: Client, msg: Message, song) => {
     }
     if (!queue) {
         if (!msg.member.voice.channel) {
-            msg.channel.send(`You need to join the channel to play a song.`);
-            return;
+            return msg.channel.send(`You need to join the channel to play a song.`);
         }
         try {
             createQueue(bot, msg, song).then((queue) => {
@@ -65,9 +66,8 @@ export const execute = async (bot: Client, msg: Message, song) => {
     }
     else {
         const channel: VoiceChannel = bot.channels.cache.get(queue.voiceChannel) as VoiceChannel;
-        if (!msg.member.voice.channel || msg.member.voice.channel.id !== channel.id) {
-            msg.channel.send(`You need to join the voice channel <#${channel.id}> to play a song.`);
-            return;
+        if (msg.member.voice.channel.id !== channel.id) {
+            return msg.channel.send(`You need to join the voice channel <#${channel.id}> to hear the song.`);
         }
         queue.songs.push(song);
         queue.textChannel.send({
@@ -89,6 +89,98 @@ export const execute = async (bot: Client, msg: Message, song) => {
             }
         })
         logger(bot, "song.enqueue", msg.member, `Adding song ${song.title} to ${msg.guild.name} queue`)
+    }
+}
+
+
+export const pause = async (bot: Client, msg: Message) => {
+    let queue = serverQueues.get(msg.guild.id);
+    if (!queue) {
+        return msg.channel.send("There's no song to be paused.");
+    }
+    if (queue.connection && queue.connection.dispatcher)
+        queue.connection.dispatcher.pause();
+}
+
+export const resume = async (bot: Client, msg: Message) => {
+    let queue = serverQueues.get(msg.guild.id);
+    if (!queue) {
+        return msg.channel.send("There's no song to be resumed.");
+    }
+    if (queue.connection && queue.connection.dispatcher) {
+        logger(bot, "song.resume", msg.member, `Resuming song ${queue.songs[0].title}`)
+        queue.connection.dispatcher.resume();
+    }
+}
+
+export const volume = async (bot: Client, msg: Message) => {
+    const queue = serverQueues.get(msg.guild.id);
+    if (!queue) {
+        return msg.channel.send("The bot needs to be playing to adjust the volume");
+    }
+    try {
+        const volume = Number(msg.content.split(" ")[1]) / 10;
+        if (volume < 0 || volume > 10) throw new Error("Invalid number");
+        queue.connection.dispatcher.setVolume(volume)
+        queue.volume = volume;
+        serverQueues.set(msg.guild.id, queue);
+        logger(bot, "song.volume", msg.member, `Setting volume to ${volume}`)
+    }
+    catch (err) {
+        msg.channel.send("The volume should be an integer between 0 and 10. e.g.: !vol 5")
+    }
+}
+
+export const leave = async (bot: Client, msg: Message) => {
+    const queue = serverQueues.get(msg.guild.id)
+    if (!queue) return msg.channel.send("Sorry, there's not channel to leave");
+    queue.connection.disconnect()
+}
+
+export const searchSong = async (bot: Client, msg: Message, content: string) => {
+    if (!content || content.length === 0) {
+        const queue = serverQueues.get(msg.guild.id);
+        if (queue && queue.connection && queue.connection.player) {
+            if (queue.connection.player["voiceConnection"]["status"] === 0) return resume(bot, msg);
+        }
+    }
+    else if (content.startsWith("http")) {
+        ytdl.getInfo(content).then((r) => {
+            const song = new Song();
+            song.title = r.title;
+            song.url = r.video_url;
+            song.videoId = r.video_id;
+            song.seconds = Number(r.length_seconds);
+            song.description = r.description;
+            song.author = {
+                id: r.author.id,
+                url: r.author.user_url,
+                channelId: r.author.id,
+                name: r.author.name,
+                channelUrl: r.author.channel_url,
+                userId: r.author.id,
+                userUrl: r.author.user_url,
+                userName: r.author.user,
+                channelName: r.author.user
+            }
+            execute(bot, msg, song)
+        })
+    }
+    else {
+        msg.channel.send(`:mag_right: Searching for **${content}** on YouTube`)
+        yts(content, async (err, r) => {
+            if (err) {
+                msg.channel.send("Sorry, I had a problem to search your music! Trying again later...")
+                return logger(bot, "song.play", msg.member, err)
+            }
+            if (r.videos.length > 0) {
+                let song: Song = r.videos.shift();
+                execute(bot, msg, song);
+            }
+            else {
+                msg.channel.send("Sorry, I couldn't find the song that you asked.")
+            }
+        })
     }
 }
 
@@ -164,41 +256,23 @@ export const skipSong = async (bot: Client, msg: Message) => {
     }
 }
 
-export const pause = async (bot: Client, msg: Message) => {
-    let queue = serverQueues.get(msg.guild.id);
-    if (!queue) {
-        return msg.channel.send("There's no song to be paused.");
-    }
-    if (queue.connection && queue.connection.dispatcher)
-        queue.connection.dispatcher.pause();
-}
-
-export const resume = async (bot: Client, msg: Message) => {
-    let queue = serverQueues.get(msg.guild.id);
-    if (!queue) {
-        return msg.channel.send("There's no song to be resumed.");
-    }
-    logger(bot, "song.resume", msg.member, `Resuming song ${queue.songs[0]}`)
-    if (queue.connection && queue.connection.dispatcher)
-        queue.connection.dispatcher.resume();
-}
-
-export const volume = async (bot: Client, msg: Message) => {
+export const emptyQueue = async (bot: Client, msg: Message) => {
     const queue = serverQueues.get(msg.guild.id);
     if (!queue) {
-        return msg.channel.send("The bot needs to be playing to adjust the volume");
+        return msg.channel.send("Sorry, there's no queue to be cleaned.");
     }
-    try {
-        const volume = Number(msg.content.split(" ")[1]) / 10;
-        if (volume < 0 || volume > 10) throw new Error("Invalid number");
-        queue.connection.dispatcher.setVolume(volume)
-        queue.volume = volume;
-        serverQueues.set(msg.guild.id, queue);
-        logger(bot, "song.volume", msg.member, `Setting volume to ${volume}`)
-    }
-    catch (err) {
-        msg.channel.send("The volume should be an integer between 0 and 10. e.g.: !vol 5")
-    }
+    const removed = queue.songs.length - 1;
+    queue.songs = queue.songs.slice(1, queue.songs.length - 1);
+    serverQueues.set(msg.guild.id, queue);
+    return msg.channel.send(`${removed} song${removed > 1 ? 's' : ''} removed from the queue`);
+}
+
+const createQueue = async (bot: Client, msg: Message, song: Song) => {
+    const voice = await msg.member.voice.channel.join();
+    let queue = new ChannelQueue(msg.channel as TextChannel, msg.member.voice.channelID, voice);
+    queue.songs.push(song);
+    serverQueues.set(msg.guild.id, queue);
+    return queue;
 }
 
 const cleanupQueue = async (bot: Client, msg: Message) => {
@@ -206,17 +280,6 @@ const cleanupQueue = async (bot: Client, msg: Message) => {
     if (!queue) {
         return msg.channel.send("Sorry, there's no queue to be cleaned.");
     }
-    if (queue.connection && queue.connection.dispatcher) {
-        queue.connection.dispatcher.end();
-        queue.connection.channel.leave();
-    }
+    if (queue.connection) queue.connection.disconnect()
     serverQueues.delete(msg.guild.id);
-}
-
-const createQueue = async (bot: Client, msg: Message, song: Song) => {
-    const voice = await msg.member.voice.channel.join();
-    let queue = new ChannelQueue(msg.channel, msg.member.voice.channelID, voice);
-    queue.songs.push(song);
-    serverQueues.set(msg.guild.id, queue);
-    return queue;
 }

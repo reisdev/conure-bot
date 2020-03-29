@@ -11,18 +11,18 @@ Available commands:
 \`\`\`
 **Music**:
 \`\`\`md
-!p <song name or url> : Search and play the song
+!p <song name or url>? : Search and play the song or resume the last playing
 !resume : resume the current song
 !pause : pause the current song
 !stop : Stop all playing songs
 !skip : Skip the current song
-!vol or !volume <integer 0-10>: Set the song volume
+!vol or !volume <integer 0-10>: Set the volume
+!cleanup: Empty the songs queue
 \`\`\`
 `
 
 const adminCommands = `**Admin commands**:
 \`\`\`md
-!cleanup: Clean up all the chat messages;
 !getout: Turn off the bot
 !log: console.log the msg
 !rs or !restart: Restart the bot service

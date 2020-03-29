@@ -8,14 +8,6 @@ const filter = (m) => {
 
 export default (bot: Client, msg: Message) => {
     switch (msg.content.trim()) {
-        case `${process.env.PREFIX}cleanup`:
-            if (msg.member.hasPermission("MANAGE_MESSAGES")) {
-                msg.channel.messages.fetch({ limit: 100 }).then((list) => {
-                    msg.channel.bulkDelete(list).then(() =>
-                        logger(bot, "cleanup", msg.member, `Cleaning up ${list.size} messages`));
-                })
-            }
-            return true;
         case `${process.env.PREFIX}getout`:
             msg.channel.send(`Ok, <@${msg.author.id}> !I'm out..`).then(() => {
                 logger(bot, "getout", msg.member);
@@ -40,10 +32,14 @@ export default (bot: Client, msg: Message) => {
             bot.login(process.env.AUTH_TOKEN).then(() => msg.channel.send(`Done, <@${msg.author.id}>! I'm back.`));
             return true;
         case `${process.env.PREFIX}rollback`:
+            if (!msg.member.hasPermission("MANAGE_MESSAGES")) return msg.channel.send("Sorry, you have no rights to do this");
             msg.channel.messages.fetch({ limit: 100 }).then((list) => {
                 const toDelete = list.filter(m => filter(m))
-                msg.channel.bulkDelete(toDelete).then(() =>
-                    logger(bot, "cleanup", msg.member, `Cleaning up ${list.size} messages`));
+                msg.channel.bulkDelete(toDelete).catch((e) => {
+                    msg.channel.send("Sorry, I have no rights to do this!");
+                }).then(() => {
+                    logger(bot, "cleanup", msg.member, `Cleaning up ${list.size} messages`);
+                })
             })
             return true;
         case `${process.env.PREFIX}rs`:

@@ -197,6 +197,7 @@ export const playSong = async (bot: Client, msg: Message, song: Song) => {
             queue.textChannel.send({
                 embed: {
                     title: song.title,
+                    description: `Channel: ${song.author.name} Duration: ${song.timestamp} Position: ${queue.songs.length}`,
                     url: song.url,
                     timestamp: Date.now(),
                     thumbnail: {
@@ -205,11 +206,7 @@ export const playSong = async (bot: Client, msg: Message, song: Song) => {
                     author: {
                         name: "Now Playing",
                         icon_url: `https://cdn.discordapp.com/avatars/${bot.user.id}/${bot.user.avatar}.png`
-                    },
-                    fields: [
-                        { name: "Channel", value: song.author.name, inline: true },
-                        { name: "Duration", value: song.timestamp, inline: true }
-                    ]
+                    }
                 }
             })
         })

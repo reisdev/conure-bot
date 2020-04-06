@@ -13,7 +13,7 @@ bot["commands"] = new Discord.Collection();
 const folders = fs.readdirSync(path.join(__dirname, "/commands"))
 
 for (var folder of folders) {
-  const files = fs.readdirSync(path.join(__dirname, "/commands", folder)).filter((filename) => filename.endsWith(".ts"))
+  const files = fs.readdirSync(path.join(__dirname, "/commands", folder)).filter((filename) => /^.*\.(t|j)s$/.test(filename))
   for (var filename of files) {
     const command = require(`./commands/${folder}/${filename}`).default;
     bot["commands"].set(command.name, command);

@@ -13,7 +13,7 @@ const execute = (bot: Client, msg: Message, args: string[]) => {
             }
         }
     })
-    msg.channel.send(`**Basic:** \`\`\`bash ${string} \`\`\`\n${adminString.length > 0 ? `**Admin:**\n\`\`\`bash\n${adminString}\n\`\`\` ` : ""}`);
+    msg.channel.send(`**Basic:** \`\`\`bash\n${string} \`\`\`\n${adminString.length > 0 ? `**Admin:**\n\`\`\`bash\n${adminString}\n\`\`\` ` : ""}`);
 }
 
 export default {

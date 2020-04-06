@@ -1,12 +1,24 @@
 import Discord, { Message } from "discord.js";
 import dotenv from "dotenv";
-import commands from "./commands";
 import logger from "./utils/logger";
-import { serverQueues } from './utils/queue'
+import { serverQueues } from './utils/music'
+import fs from "fs";
+import path from "path"
 
 dotenv.config();
 
 const bot = new Discord.Client();
+bot["commands"] = new Discord.Collection();
+
+const folders = fs.readdirSync(path.join(__dirname, "/commands"))
+
+for (var folder of folders) {
+  const files = fs.readdirSync(path.join(__dirname, "/commands", folder)).filter((filename) => filename.endsWith(".ts"))
+  for (var filename of files) {
+    const command = require(`./commands/${folder}/${filename}`).default;
+    bot["commands"].set(command.name, command);
+  }
+}
 
 const closeBot = () => {
   bot.destroy();
@@ -44,9 +56,14 @@ bot.on("error", (err) => {
 })
 
 bot.on("message", async (msg: Message) => {
-  if (!msg.content.startsWith(`${process.env.PREFIX}`)) return;
-  else if (msg.author.bot) return
-  commands(bot, msg)
+  if (!msg.content.startsWith(`${process.env.PREFIX}`) || msg.author.bot) return;
+  const args = msg.content.slice(process.env.PREFIX.length).split(" ");
+  const command = args.shift();
+  try {
+    bot["commands"].get(command).execute(bot, msg, args);
+  } catch (e) {
+    msg.reply("Sorry! I don't know this command")
+  }
 });
 
 bot.on("guildMemberAdd", (member) => {

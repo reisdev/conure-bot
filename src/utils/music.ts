@@ -110,13 +110,13 @@ export const resume = async (bot: Client, msg: Message) => {
     }
 }
 
-export const volume = async (bot: Client, msg: Message) => {
+export const volume = async (bot: Client, msg: Message, vol: number) => {
     const queue = serverQueues.get(msg.guild.id);
     if (!queue) {
         return msg.channel.send("The bot needs to be playing to adjust the volume");
     }
     try {
-        const volume = Number(msg.content.split(" ")[1]) / 10;
+        const volume = vol / 10;
         if (volume < 0 || volume > 10) throw new Error("Invalid number");
         queue.connection.dispatcher.setVolume(volume)
         queue.volume = volume;
@@ -185,8 +185,8 @@ export const playSong = async (bot: Client, msg: Message, song: Song) => {
     let queue = serverQueues.get(msg.guild.id);
     if (!song) return cleanupQueue(bot, msg);
     if (!queue) queue = await createQueue(bot, msg, song);
-    ytdl(song.url, { filter: "audioonly", quality: "highestaudio", highWaterMark: 1 << 2 }).then(stream => {
-        const dispatcher = queue.connection.play(stream, { type: "opus", highWaterMark: 1 });
+    ytdl(song.url, { filter: "audioonly", quality: "highestaudio", highWaterMark: 1 << 25 }).then(stream => {
+        const dispatcher = queue.connection.play(stream, { type: "opus", highWaterMark: 15 });
         dispatcher.setVolumeLogarithmic(queue.volume);
         dispatcher.on("finish", () => {
             queue.songs.shift();

@@ -5,7 +5,7 @@ import { DiscordBot } from "../..";
 const execute = (bot: DiscordBot, msg: Message, args: string[]) => {
     if (!msg.member.hasPermission("ADMINISTRATOR")) return;
     msg.reply(` I'm out..`).then(() => {
-        logger(bot, "kill", msg.member);
+        bot.logger("kill", msg.member);
         bot.voice.connections.forEach(c => c.channel.leave())
         bot.destroy()
         process.exit(0)

@@ -13,7 +13,7 @@ const execute = (bot: DiscordBot, msg: Message, args: string[]) => {
         msg.channel.bulkDelete(toDelete).catch((e) => {
             msg.channel.send("Sorry, I have no rights to do this!");
         }).then(() => {
-            logger(bot, "cleanup", msg.member, `Cleaning up ${list.size} messages`);
+            bot.logger("cleanup", msg.member, `Cleaning up ${list.size} messages`);
         })
     })
 }

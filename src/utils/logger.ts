@@ -1,13 +1,12 @@
 import { GuildMember, Client } from "discord.js";
-import { DiscordBot } from "..";
 
-export default (bot: DiscordBot, command: string, member: GuildMember, description: any = null) => {
+export default function (command: string, member: GuildMember = null, description: any = null) {
     if (typeof description === "object") {
         if (member) {
             console.log(`[${member.user.username}#${member.user.discriminator} : ${command}]`)
         }
         else {
-            console.log(`[${bot.user.username}#${bot.user.discriminator} : ${command}]`)
+            console.log(`[${this.user.username}#${this.user.discriminator} : ${command}]`)
         }
         if (description) console.log(description);
     }
@@ -16,7 +15,7 @@ export default (bot: DiscordBot, command: string, member: GuildMember, descripti
             console.log(`[${member.user.username}#${member.user.discriminator} : ${command}] ${description || ""}`)
         }
         else {
-            console.log(`[${bot.user.username}#${bot.user.discriminator} : ${command}] ${description || ""}`)
+            console.log(`[${this.user.username}#${this.user.discriminator} : ${command}] ${description || ""}`)
         }
     }
 }

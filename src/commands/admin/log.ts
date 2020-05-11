@@ -5,7 +5,7 @@ import { DiscordBot } from "../..";
 
 const execute = (bot: DiscordBot, msg: Message, args: string[]) => {
     if (msg.member.hasPermission("ADMINISTRATOR")) {
-        logger(bot, "log", msg.member, msg)
+        bot.logger("log", msg.member, msg)
         msg.channel.send(`This message has been logged to the console!`)
     }
     else {

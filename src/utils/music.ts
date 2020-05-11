@@ -1,9 +1,12 @@
-import { VoiceConnection, Message, Client, TextChannel, VoiceChannel } from "discord.js"
+import { VoiceConnection, Message, Client, TextChannel, VoiceChannel, ReactionCollector } from "discord.js"
 
 import ytdl from 'ytdl-core-discord';
 import yts from "yt-search";
-import logger from "./logger";
 import { DiscordBot } from "..";
+
+import { default as resume } from "../commands/music/resume";
+import { default as pause } from "../commands/music/pause";
+import { default as stopSong } from "../commands/music/stop";
 
 export class ChannelQueue {
     textChannel: TextChannel = null;
@@ -86,28 +89,7 @@ export const execute = async (bot: DiscordBot, msg: Message, song) => {
                 }
             }
         })
-        logger(bot, "song.enqueue", msg.member, `Adding song ${song.title} to ${msg.guild.name} queue`)
-    }
-}
-
-
-export const pause = async (bot: DiscordBot, msg: Message) => {
-    let queue = bot.queues.get(msg.guild.id);
-    if (!queue) {
-        return msg.reply("there's no song to be paused.");
-    }
-    if (queue.connection && queue.connection.dispatcher)
-        queue.connection.dispatcher.pause();
-}
-
-export const resume = async (bot: DiscordBot, msg: Message) => {
-    let queue = bot.queues.get(msg.guild.id);
-    if (!queue) {
-        return msg.reply("there's no song to be resumed.");
-    }
-    if (queue.connection && queue.connection.dispatcher) {
-        logger(bot, "song.resume", msg.member, `Resuming song ${queue.songs[0].title}`)
-        queue.connection.dispatcher.resume();
+        bot.logger("song.enqueue", msg.member, `Adding song ${song.title} to ${msg.guild.name} queue`)
     }
 }
 
@@ -122,7 +104,7 @@ export const volume = async (bot: DiscordBot, msg: Message, vol: number) => {
         queue.connection.dispatcher.setVolume(volume)
         queue.volume = volume;
         bot.queues.set(msg.guild.id, queue);
-        logger(bot, "song.volume", msg.member, `Setting volume to ${volume}`)
+        bot.logger("song.volume", msg.member, `Setting volume to ${volume}`)
     }
     catch (err) {
         msg.reply("the volume should be an integer between 0 and 10. e.g.: !vol 5")
@@ -143,7 +125,7 @@ export const searchSong = async (bot: DiscordBot, msg: Message, content: string)
     else if (!content || content.length === 0) {
         const queue = bot.queues.get(msg.guild.id);
         if (queue && queue.connection && queue.connection.player) {
-            if (queue.connection.player["voiceConnection"]["status"] === 0) return resume(bot, msg);
+            if (queue.connection.player["voiceConnection"]["status"] === 0) return resume.execute(bot, msg);
         }
     }
     else if (content.startsWith("http")) {
@@ -173,10 +155,11 @@ export const searchSong = async (bot: DiscordBot, msg: Message, content: string)
         yts(content, async (err, r) => {
             if (err) {
                 msg.reply("Sorry, I had a problem to search your music! Trying again later...")
-                return logger(bot, "song.play", msg.member, err)
+                return bot.logger("song.play", msg.member, err)
             }
             if (r.videos.length > 0) {
                 let song: Song = r.videos.shift();
+                if (!song || !song.url) throw Error("Song not found");
                 song.addedAt = new Date();
                 execute(bot, msg, song);
             }
@@ -191,18 +174,25 @@ export const playSong = async (bot: DiscordBot, msg: Message, song: Song) => {
     let queue = bot.queues.get(msg.guild.id);
     if (!song) return cleanupQueue(bot, msg);
     if (!queue) queue = await createQueue(bot, msg, song);
-    ytdl(song.url, { filter: "audioonly", quality: "highestaudio" }).then(stream => {
-        const dispatcher = queue.connection.play(stream, { type: "opus", highWaterMark: 1 << 15 });
+
+    try {
+        const dispatcher = queue.connection.play(await ytdl(song.url, { filter: "audioonly", quality: "highestaudio" }), { type: "opus", highWaterMark: 1 << 15 });
         dispatcher.setVolumeLogarithmic(queue.volume);
+        let playCollector: ReactionCollector;
+        let pauseCollector: ReactionCollector;
+        let stopCollector: ReactionCollector;
         dispatcher.on("finish", () => {
             queue.songs.shift();
+            playCollector.stop();
+            pauseCollector.stop();
+            stopCollector.stop();
             playSong(bot, msg, queue.songs[0]);
         })
-	dispatcher.on("debug", (debug) => {
-		logger(bot,"song.debug",null,debug);
-	});
+        dispatcher.on("debug", (debug) => {
+            bot.logger("song.debug", null, debug);
+        });
         dispatcher.on("start", () => {
-            logger(bot, "song.play", null, `Playing song ${song.title}`)
+            bot.logger("song.play", null, `Playing song ${song.title}`)
             queue.textChannel.send({
                 embed: {
                     title: song.title,
@@ -220,45 +210,32 @@ export const playSong = async (bot: DiscordBot, msg: Message, song: Song) => {
                         icon_url: "https://cdn.discordapp.com/" + (bot.user.avatar !== null ? `avatars/${bot.user.id}/${bot.user.avatar}.png` : `embed/avatars/${Number(bot.user.discriminator) % 5}.png `)
                     }
                 }
+            }).then((embed: Message) => {
+                playCollector = embed.createReactionCollector((reaction, user) => reaction.emoji.name === "▶️" && !user.bot);
+                playCollector.on("collect", () => resume.execute(bot, msg))
+                playCollector.on("dispose", () => resume.execute(bot, msg))
+                embed.react("▶️");
+
+                pauseCollector = embed.createReactionCollector((reaction, user) => reaction.emoji.name === "⏸️" && !user.bot);
+                pauseCollector.on("collect", () => pause.execute(bot, msg))
+                pauseCollector.on("dispose", () => pause.execute(bot, msg))
+                embed.react("⏸️");
+
+                stopCollector = embed.createReactionCollector((reaction, user) => reaction.emoji.name === "⏹️" && !user.bot);
+                stopCollector.on("collect", () => stopSong.execute(bot, msg))
+                stopCollector.on("dispose", () => stopSong.execute(bot, msg))
+                embed.react("⏹️");
+
             })
         })
         dispatcher.on("error", (error) => {
-            logger(bot, "song.play", null, error);
+            bot.logger("song.play", null, error);
             queue.connection.disconnect();
+            bot.queues.delete(msg.guild.id);
         });
-    });
-}
-
-export const stopSong = async (bot: DiscordBot, msg: Message) => {
-    let queue = bot.queues.get(msg.guild.id);
-    if (!queue || !queue.connection) {
-        return msg.reply("There's no song playing for your current channel.");
-    }
-    else {
-        logger(bot, "song.stop", msg.member);
-        if (queue.connection && queue.connection.dispatcher)
-            queue.connection.dispatcher.end();
-    }
-}
-
-export const skipSong = async (bot: DiscordBot, msg: Message) => {
-    let queue = bot.queues.get(msg.guild.id);
-    if (!queue) {
-        return msg.reply("There's no song playing for your current channel.");
-    } else {
-        try {
-            const song = queue.songs[0];
-            if (song !== undefined) {
-                logger(bot, "song.skip", msg.member, `Skipping song ${song.title}`)
-                queue.songs.shift();
-                playSong(bot, msg, queue.songs[0]);
-            } else {
-                cleanupQueue(bot, msg)
-                throw Error("No song available");
-            }
-        } catch (e) {
-            return msg.reply("There's no song playing for your current channel.");
-        }
+    } catch (e) {
+        bot.logger("song.play", null, e);
+        queue.connection
     }
 }
 
@@ -273,7 +250,7 @@ export const emptyQueue = async (bot: DiscordBot, msg: Message) => {
     return msg.reply(`${removed} song${removed > 1 ? 's' : ''} removed from the queue`);
 }
 
-const createQueue = async (bot: DiscordBot, msg: Message, song: Song) => {
+export const createQueue = async (bot: DiscordBot, msg: Message, song: Song) => {
     const voice = await msg.member.voice.channel.join();
     let queue = new ChannelQueue(msg.channel as TextChannel, msg.member.voice.channelID, voice);
     queue.songs.push(song);
@@ -281,11 +258,12 @@ const createQueue = async (bot: DiscordBot, msg: Message, song: Song) => {
     return queue;
 }
 
-const cleanupQueue = async (bot: DiscordBot, msg: Message) => {
+export const cleanupQueue = async (bot: DiscordBot, msg: Message) => {
     const queue = bot.queues.get(msg.guild.id);
     if (!queue) {
         return msg.reply("Sorry, there's no queue to be cleaned.");
     }
     if (queue.connection) queue.connection.disconnect()
+    bot.logger("queue.end")
     bot.queues.delete(msg.guild.id);
 }

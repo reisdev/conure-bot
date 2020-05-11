@@ -1,9 +1,17 @@
 import { Client, Message } from "discord.js"
 
-import { pause } from "../../utils/music";
 import { DiscordBot } from "../..";
 
-const execute = (bot: DiscordBot, msg: Message) => pause(bot, msg);
+const execute = async (bot: DiscordBot, msg: Message) => {
+    let queue = bot.queues.get(msg.guild.id);
+    if (!queue) {
+        return msg.reply("there's no song to be paused.");
+    }
+    if (queue.connection && queue.connection.dispatcher) {
+        bot.logger("song.pause", null);
+        queue.connection.dispatcher.pause();
+    }
+}
 
 export default {
     name: "pause",

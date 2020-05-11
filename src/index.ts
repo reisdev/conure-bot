@@ -10,6 +10,7 @@ dotenv.config();
 export class DiscordBot extends Discord.Client {
   commands: Discord.Collection<string, any>;
   queues: Map<string, ChannelQueue>;
+  logger = logger;
 }
 
 const bot = new DiscordBot();
@@ -47,7 +48,7 @@ bot.on("ready", () => {
 });
 
 bot.on("error", (err) => {
-  logger(bot, "error", null, err);
+  bot.logger("error", null, err);
 })
 
 bot.on("message", async (msg: Message) => {

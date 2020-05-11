@@ -38,16 +38,6 @@ process.on("SIGTERM", closeBot)
 bot.on("ready", () => {
   console.log(`Connected as as ${bot.user.tag}! Mode: ${process.env.NODE_ENV}\n`);
   serverQueues.clear()
-  bot.guilds.cache.map((g) => {
-    if (process.env.NODE_ENV === "production") {
-      try {
-        g.systemChannel.send(`Here I am! Following the whistle of change..
-Do you want to know what I can do? Try to type **!help** or **!commands**`)
-      } catch (e) {
-        logger(bot, "startup", null, "Missing message permission for System Channel")
-      }
-    }
-  })
   process.stdin.resume();
 });
 
@@ -70,4 +60,4 @@ bot.on("guildMemberAdd", (member) => {
   member.guild.systemChannel.send(`Welcome aboard, <@${member.id}>!`)
 })
 
-bot.login(process.env.AUTH_TOKEN)
+bot.login(process.env.TOKEN)

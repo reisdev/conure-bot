@@ -191,13 +191,16 @@ export const playSong = async (bot: DiscordBot, msg: Message, song: Song) => {
     let queue = bot.queues.get(msg.guild.id);
     if (!song) return cleanupQueue(bot, msg);
     if (!queue) queue = await createQueue(bot, msg, song);
-    ytdl(song.url, { filter: "audioonly", quality: "highestaudio", highWaterMark: 1 << 25 }).then(stream => {
-        const dispatcher = queue.connection.play(stream, { type: "opus", highWaterMark: 15 });
+    ytdl(song.url, { filter: "audioonly", quality: "highestaudio" }).then(stream => {
+        const dispatcher = queue.connection.play(stream, { type: "opus", highWaterMark: 1 << 15 });
         dispatcher.setVolumeLogarithmic(queue.volume);
         dispatcher.on("finish", () => {
             queue.songs.shift();
             playSong(bot, msg, queue.songs[0]);
         })
+	dispatcher.on("debug", (debug) => {
+		logger(bot,"song.debug",null,debug);
+	});
         dispatcher.on("start", () => {
             logger(bot, "song.play", null, `Playing song ${song.title}`)
             queue.textChannel.send({

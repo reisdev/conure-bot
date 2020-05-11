@@ -1,8 +1,9 @@
 import { Client, Message } from "discord.js"
 
 import { pause } from "../../utils/music";
+import { DiscordBot } from "../..";
 
-const execute = (bot: Client, msg: Message) => pause(bot, msg);
+const execute = (bot: DiscordBot, msg: Message) => pause(bot, msg);
 
 export default {
     name: "pause",

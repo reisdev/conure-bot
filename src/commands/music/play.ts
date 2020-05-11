@@ -1,8 +1,9 @@
 import { Client, Message } from "discord.js";
 
 import { searchSong } from "../../utils/music";
+import { DiscordBot } from "../..";
 
-const execute = (bot: Client, msg: Message, args: string[]) => searchSong(bot, msg, args.join(" "));
+const execute = (bot: DiscordBot, msg: Message, args: string[]) => searchSong(bot, msg, args.join(" "));
 
 export default {
     name: "p",

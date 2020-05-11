@@ -1,8 +1,9 @@
 import { Client, Message } from "discord.js";
 import logger from "../../utils/logger"
+import { DiscordBot } from "../..";
 
 
-const execute = (bot: Client, msg: Message, args: string[]) => {
+const execute = (bot: DiscordBot, msg: Message, args: string[]) => {
     if (msg.member.hasPermission("ADMINISTRATOR")) {
         logger(bot, "log", msg.member, msg)
         msg.channel.send(`This message has been logged to the console!`)

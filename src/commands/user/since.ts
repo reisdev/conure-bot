@@ -1,7 +1,8 @@
 import { Client, Message } from "discord.js"
 import moment from "moment"
+import { DiscordBot } from "../..";
 
-const execute = (bot: Client, msg: Message, args) => {
+const execute = (bot: DiscordBot, msg: Message, args) => {
     const since = moment(msg.member.joinedTimestamp).format("DD/MM/YYYY");
     msg.channel.send({
         embed: {

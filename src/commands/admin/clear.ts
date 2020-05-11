@@ -1,11 +1,12 @@
 import { Client, Message } from "discord.js"
 import logger from "../../utils/logger";
+import { DiscordBot } from "../..";
 
 const filter = (m) => {
     return m.content.startsWith(`${process.env.PREFIX}`) || m.author.bot
 }
 
-const execute = (bot: Client, msg: Message, args: string[]) => {
+const execute = (bot: DiscordBot, msg: Message, args: string[]) => {
     if (!msg.member.hasPermission("MANAGE_MESSAGES")) return msg.channel.send("Sorry, you have no rights to do this");
     msg.channel.messages.fetch({ limit: 100 }).then((list) => {
         const toDelete = list.filter(m => filter(m))

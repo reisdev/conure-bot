@@ -1,6 +1,7 @@
 import { Client, Message } from "discord.js";
+import { DiscordBot } from "../..";
 
-const execute = (bot: Client, msg: Message, args: string[]) => {
+const execute = (bot: DiscordBot, msg: Message, args: string[]) => {
     if (!msg.member.hasPermission("ADMINISTRATOR")) return;
     msg.channel.send(`I'll be back, <@${msg.author.id}>...`);
     bot.destroy()

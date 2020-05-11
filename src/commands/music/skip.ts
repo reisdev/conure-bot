@@ -1,8 +1,9 @@
 import { Client, Message } from "discord.js"
 
 import { skipSong } from "../../utils/music";
+import { DiscordBot } from "../..";
 
-const execute = (bot: Client, msg: Message) => skipSong(bot, msg);
+const execute = (bot: DiscordBot, msg: Message) => skipSong(bot, msg);
 
 export default {
     name: "skip",

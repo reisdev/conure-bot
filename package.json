@@ -17,6 +17,7 @@
     "ffmpeg": "0.0.4",
     "fluent-ffmpeg": "^2.1.2",
     "moment": "^2.24.0",
+    "opusscript": "^0.0.7",
     "typescript": "^3.8.3",
     "yt-search": "^1.1.2",
     "ytdl-core-discord": "^1.1.0"
@@ -30,6 +31,6 @@
     "nodemon": "^1.18.4"
   },
   "engines": {
-    "node": "10.16.0"
+    "node": "14.2.0"
   }
 }

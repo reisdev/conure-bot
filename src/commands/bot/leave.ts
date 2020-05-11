@@ -1,6 +1,7 @@
 import { Client, Message } from "discord.js";
+import { DiscordBot } from "../..";
 
-const execute = (bot: Client, msg: Message) => {
+const execute = (bot: DiscordBot, msg: Message) => {
     if (msg.member.voice.channel)
         msg.member.voice.channel.leave();
     else {

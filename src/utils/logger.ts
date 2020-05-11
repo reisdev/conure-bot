@@ -1,6 +1,7 @@
 import { GuildMember, Client } from "discord.js";
+import { DiscordBot } from "..";
 
-export default (bot: Client, command: string, member: GuildMember, description: any = null) => {
+export default (bot: DiscordBot, command: string, member: GuildMember, description: any = null) => {
     if (typeof description === "object") {
         if (member) {
             console.log(`[${member.user.username}#${member.user.discriminator} : ${command}]`)

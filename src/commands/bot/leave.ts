@@ -1,7 +1,7 @@
 import { Client, Message } from "discord.js";
 import { DiscordBot } from "../..";
 
-const execute = (bot: DiscordBot, msg: Message) => {
+const run = (bot: DiscordBot, msg: Message) => {
     if (msg.member.voice.channel)
         msg.member.voice.channel.leave();
     else {
@@ -12,5 +12,5 @@ const execute = (bot: DiscordBot, msg: Message) => {
 export default {
     name: "leave",
     help: "The bot leaves the current voice channel",
-    execute
+    run
 }

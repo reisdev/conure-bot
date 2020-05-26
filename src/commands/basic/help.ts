@@ -1,7 +1,7 @@
 import { Client, Message, Collection } from 'discord.js'
 import { DiscordBot } from '../..';
 
-const execute = (bot: DiscordBot, msg: Message, args: string[]) => {
+const run = (bot: DiscordBot, msg: Message, args: string[]) => {
     let string = "";
     let adminString = "";
     const commands = (bot["commands"] as Collection<string, any>).array().sort((a, b) => a.name > b.name ? 1 : -1)
@@ -19,5 +19,5 @@ const execute = (bot: DiscordBot, msg: Message, args: string[]) => {
 
 export default {
     name: "help",
-    execute
+    run
 }

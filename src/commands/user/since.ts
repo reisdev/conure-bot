@@ -2,7 +2,7 @@ import { Client, Message } from "discord.js"
 import moment from "moment"
 import { DiscordBot } from "../..";
 
-const execute = (bot: DiscordBot, msg: Message, args) => {
+const run = (bot: DiscordBot, msg: Message, args) => {
     const since = moment(msg.member.joinedTimestamp).format("DD/MM/YYYY");
     msg.channel.send({
         embed: {
@@ -23,5 +23,5 @@ const execute = (bot: DiscordBot, msg: Message, args) => {
 export default {
     name: "since",
     help: "Information about user lifetime in the Server",
-    execute
+    run
 }

@@ -56,7 +56,7 @@ bot.on("message", async (msg: Message) => {
   const args = msg.content.slice(process.env.PREFIX.length).split(" ");
   const command = args.shift();
   try {
-    bot.commands.get(command).execute(bot, msg, args);
+    bot.commands.get(command).run(bot, msg, args);
   } catch (e) {
     msg.reply("Sorry! I don't know this command")
   }

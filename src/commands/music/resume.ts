@@ -2,7 +2,7 @@ import { Client, Message } from "discord.js"
 
 import { DiscordBot } from "../..";
 
-const execute = async (bot: DiscordBot, msg: Message) => {
+const run = async (bot: DiscordBot, msg: Message) => {
     let queue = bot.queues.get(msg.guild.id);
     if (!queue) {
         return msg.reply("there's no song to be resumed.");
@@ -16,5 +16,5 @@ const execute = async (bot: DiscordBot, msg: Message) => {
 export default {
     name: "resume",
     help: "Resume the current song",
-    execute
+    run
 }

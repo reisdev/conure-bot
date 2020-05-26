@@ -3,7 +3,7 @@ import { Client, Message } from "discord.js"
 import { DiscordBot } from "../..";
 import { playSong, cleanupQueue } from "../../utils/music";
 
-const execute = async (bot: DiscordBot, msg: Message) => {
+const run = async (bot: DiscordBot, msg: Message) => {
     let queue = bot.queues.get(msg.guild.id);
     if (!queue) {
         return msg.reply("There's no song playing for your current channel.");
@@ -27,5 +27,5 @@ const execute = async (bot: DiscordBot, msg: Message) => {
 export default {
     name: "skip",
     help: "Skip the current song",
-    execute
+    run
 }

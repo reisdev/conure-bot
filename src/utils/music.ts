@@ -50,7 +50,7 @@ export class Song {
     }
 }
 
-export const execute = async (bot: DiscordBot, msg: Message, song) => {
+export const run = async (bot: DiscordBot, msg: Message, song) => {
     let queue = bot.queues.get(msg.guild.id);
     if (!song) {
         return cleanupQueue(bot, msg);
@@ -125,7 +125,7 @@ export const searchSong = async (bot: DiscordBot, msg: Message, content: string)
     else if (!content || content.length === 0) {
         const queue = bot.queues.get(msg.guild.id);
         if (queue && queue.connection && queue.connection.player) {
-            if (queue.connection.player["voiceConnection"]["status"] === 0) return resume.execute(bot, msg);
+            if (queue.connection.player["voiceConnection"]["status"] === 0) return resume.run(bot, msg);
         }
     }
     else if (content.startsWith("http")) {
@@ -147,7 +147,7 @@ export const searchSong = async (bot: DiscordBot, msg: Message, content: string)
                 userName: r.author.user,
                 channelName: r.author.user
             }
-            execute(bot, msg, song)
+            run(bot, msg, song)
         })
     }
     else {
@@ -161,7 +161,7 @@ export const searchSong = async (bot: DiscordBot, msg: Message, content: string)
                 let song: Song = r.videos.shift();
                 if (!song || !song.url) throw Error("Song not found");
                 song.addedAt = new Date();
-                execute(bot, msg, song);
+                run(bot, msg, song);
             }
             else {
                 msg.reply("Sorry, I couldn't find the song that you asked.")
@@ -212,18 +212,18 @@ export const playSong = async (bot: DiscordBot, msg: Message, song: Song) => {
                 }
             }).then((embed: Message) => {
                 playCollector = embed.createReactionCollector((reaction, user) => reaction.emoji.name === "▶️" && !user.bot);
-                playCollector.on("collect", () => resume.execute(bot, msg))
-                playCollector.on("dispose", () => resume.execute(bot, msg))
+                playCollector.on("collect", () => resume.run(bot, msg))
+                playCollector.on("dispose", () => resume.run(bot, msg))
                 embed.react("▶️");
 
                 pauseCollector = embed.createReactionCollector((reaction, user) => reaction.emoji.name === "⏸️" && !user.bot);
-                pauseCollector.on("collect", () => pause.execute(bot, msg))
-                pauseCollector.on("dispose", () => pause.execute(bot, msg))
+                pauseCollector.on("collect", () => pause.run(bot, msg))
+                pauseCollector.on("dispose", () => pause.run(bot, msg))
                 embed.react("⏸️");
 
                 stopCollector = embed.createReactionCollector((reaction, user) => reaction.emoji.name === "⏹️" && !user.bot);
-                stopCollector.on("collect", () => stopSong.execute(bot, msg))
-                stopCollector.on("dispose", () => stopSong.execute(bot, msg))
+                stopCollector.on("collect", () => stopSong.run(bot, msg))
+                stopCollector.on("dispose", () => stopSong.run(bot, msg))
                 embed.react("⏹️");
 
             })

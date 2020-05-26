@@ -2,7 +2,7 @@ import { Message } from "discord.js"
 
 import { DiscordBot } from "../..";
 
-const execute = async (bot: DiscordBot, msg: Message) => {
+const run = async (bot: DiscordBot, msg: Message) => {
     let queue = bot.queues.get(msg.guild.id);
     if (!queue || !queue.connection) {
         return msg.reply("There's no song playing for your current channel.");
@@ -18,5 +18,5 @@ const execute = async (bot: DiscordBot, msg: Message) => {
 export default {
     name: "stop",
     help: "Stop the current song and leaves the channel",
-    execute
+    run
 }

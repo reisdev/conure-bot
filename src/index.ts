@@ -33,6 +33,7 @@ for (var filename of eventsFolder) {
   bot.on(event.name, event.run);
 }
 
+
 const closeBot = () => {
   bot.destroy();
   bot.queues.forEach(queue => {
@@ -68,9 +69,5 @@ bot.on("message", async (msg: Message) => {
     msg.reply("Sorry! I don't know this command")
   }
 });
-
-bot.on("guildMemberAdd", (member) => {
-  member.guild.systemChannel.send(`Welcome aboard, <@${member.id}>!`)
-})
 
 bot.login(process.env.TOKEN)

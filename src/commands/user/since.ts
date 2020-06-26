@@ -1,6 +1,6 @@
-import { Client, Message } from "discord.js"
-import moment from "moment"
+import { Message } from "discord.js"
 import { DiscordBot } from "../..";
+import moment from "moment"
 
 const run = (bot: DiscordBot, msg: Message, args) => {
     const since = moment(msg.member.joinedTimestamp).format("DD/MM/YYYY");

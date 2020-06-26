@@ -26,14 +26,6 @@ for (var folder of commandsFolder) {
   }
 }
 
-const eventsFolder = fs.readdirSync(path.join(__dirname, "/events"))
-
-for (var filename of eventsFolder) {
-  const event = require(`./events/${filename}`).default;
-  bot.on(event.name, event.run);
-}
-
-
 const closeBot = () => {
   bot.destroy();
   bot.queues.forEach(queue => {
@@ -69,5 +61,12 @@ bot.on("message", async (msg: Message) => {
     msg.reply("Sorry! I don't know this command")
   }
 });
+
+const eventsFolder = fs.readdirSync(path.join(__dirname, "/events"))
+
+for (var filename of eventsFolder) {
+  const event = require(`./events/${filename}`).default;
+  bot.on(event.name, event.run);
+}
 
 bot.login(process.env.TOKEN)

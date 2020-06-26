@@ -39,6 +39,6 @@ const run = (member: GuildMember) => {
 }
 
 export default {
-    event: "guildMemberAdd",
+    name: "guildMemberAdd",
     run
 }

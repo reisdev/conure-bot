@@ -1,4 +1,4 @@
-import { Client, Message, Collection } from 'discord.js'
+import { Message, Collection } from 'discord.js'
 import { DiscordBot } from '../..';
 
 const run = (bot: DiscordBot, msg: Message, args: string[]) => {

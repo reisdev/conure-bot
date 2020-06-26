@@ -16,14 +16,21 @@ export class DiscordBot extends Discord.Client {
 const bot = new DiscordBot();
 bot.commands = new Discord.Collection();
 
-const folders = fs.readdirSync(path.join(__dirname, "/commands"))
+const commandsFolder = fs.readdirSync(path.join(__dirname, "/commands"))
 
-for (var folder of folders) {
+for (var folder of commandsFolder) {
   const files = fs.readdirSync(path.join(__dirname, "/commands", folder)).filter((filename) => /^.*\.(t|j)s$/.test(filename))
   for (var filename of files) {
     const command = require(`./commands/${folder}/${filename}`).default;
     bot.commands.set(command.name, command);
   }
+}
+
+const eventsFolder = fs.readdirSync(path.join(__dirname, "/events"))
+
+for (var filename of eventsFolder) {
+  const event = require(`./events/${filename}`).default;
+  bot.on(event.name, event.run);
 }
 
 const closeBot = () => {

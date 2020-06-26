@@ -1,5 +1,4 @@
-import { Client, Message } from "discord.js";
-import logger from "../../utils/logger"
+import { Message } from "discord.js";
 import { DiscordBot } from "../..";
 
 

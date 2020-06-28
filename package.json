@@ -7,7 +7,9 @@
     "dev": "nodemon",
     "build": "tsc",
     "deploy": "node dist/index.js",
-    "deploy:ec2": "rm -rf dist && npm run build && pm2 start -f --name conure-bot ./dist/index.js"
+    "predeploy:ec2": "rm -rf dist && pm2 delete conure-bot",
+    "deploy:ec2": "npm run build && pm2 start -f --name conure-bot ./dist/index.js",
+    "postdeploy:ec2": "pm2 save"
   },
   "dependencies": {
     "@discordjs/opus": "^0.1.0",

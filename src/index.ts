@@ -66,7 +66,8 @@ const eventsFolder = fs.readdirSync(path.join(__dirname, "/events"))
 
 for (var filename of eventsFolder) {
   const event = require(`./events/${filename}`).default;
-  bot.on(event.name, event.run);
+  const [eventName] = filename.split(".")
+  bot.on(eventName as any, event);
 }
 
 bot.login(process.env.TOKEN)

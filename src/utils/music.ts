@@ -58,6 +58,7 @@ export const run = async (bot: DiscordBot, msg: Message, song) => {
     if (!queue) {
         try {
             createQueue(bot, msg, song).then((queue) => {
+                if (!queue) return;
                 playSong(bot, msg, song);
             })
         } catch (e) {
@@ -122,6 +123,9 @@ export const searchSong = async (bot: DiscordBot, msg: Message, content: string)
     if (!msg.member.voice.channel) {
         return msg.reply(`You need to join the channel to play a song.`);
     }
+    else if (!msg.member.voice.channel.joinable) {
+        return msg.reply("Sorry, I can't join this channel");
+    }
     else if (!content || content.length === 0) {
         const queue = bot.queues.get(msg.guild.id);
         if (queue && queue.connection && queue.connection.player) {
@@ -174,6 +178,8 @@ export const playSong = async (bot: DiscordBot, msg: Message, song: Song) => {
     let queue = bot.queues.get(msg.guild.id);
     if (!song) return cleanupQueue(bot, msg);
     if (!queue) queue = await createQueue(bot, msg, song);
+
+    if (!queue) return;
 
     try {
         const dispatcher = queue.connection.play(await ytdl(song.url, { filter: "audioonly", quality: "highestaudio" }), { type: "opus", highWaterMark: 1 << 15 });
@@ -251,11 +257,16 @@ export const emptyQueue = async (bot: DiscordBot, msg: Message) => {
 }
 
 export const createQueue = async (bot: DiscordBot, msg: Message, song: Song) => {
-    const voice = await msg.member.voice.channel.join();
-    let queue = new ChannelQueue(msg.channel as TextChannel, msg.member.voice.channelID, voice);
-    queue.songs.push(song);
-    bot.queues.set(msg.guild.id, queue);
-    return queue;
+    try {
+        const voice = await msg.member.voice.channel.join();
+        let queue = new ChannelQueue(msg.channel as TextChannel, msg.member.voice.channelID, voice);
+        queue.songs.push(song);
+        bot.queues.set(msg.guild.id, queue);
+        return queue;
+    } catch (e) {
+        bot.logger("create.queue", msg.member, "The bot has no permission to join the channel")
+        return null;
+    }
 }
 
 export const cleanupQueue = async (bot: DiscordBot, msg: Message) => {

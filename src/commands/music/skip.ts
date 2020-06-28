@@ -1,4 +1,4 @@
-import { Client, Message } from "discord.js"
+import { Message } from "discord.js"
 
 import { DiscordBot } from "../..";
 import { playSong, cleanupQueue } from "../../utils/music";

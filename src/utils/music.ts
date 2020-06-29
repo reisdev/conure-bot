@@ -12,7 +12,7 @@ export class ChannelQueue {
     textChannel: TextChannel = null;
     voiceChannel: string = null;
     connection: VoiceConnection = null;
-    songs: Array<Song>;
+    songs: Song[];
     volume: number = 0.5;
     playing: Boolean = true;
     constructor(text: TextChannel, voice: string, conn: VoiceConnection) {
@@ -189,6 +189,7 @@ export const playSong = async (bot: DiscordBot, msg: Message, song: Song) => {
         let stopCollector: ReactionCollector;
         dispatcher.on("finish", () => {
             queue.songs.shift();
+            bot.queues.set(msg.guild.id, queue);
             playCollector.stop();
             pauseCollector.stop();
             stopCollector.stop();
@@ -231,7 +232,6 @@ export const playSong = async (bot: DiscordBot, msg: Message, song: Song) => {
                 stopCollector.on("collect", () => stopSong.run(bot, msg))
                 stopCollector.on("dispose", () => stopSong.run(bot, msg))
                 embed.react("⏹️");
-
             })
         })
         dispatcher.on("error", (error) => {
@@ -241,7 +241,7 @@ export const playSong = async (bot: DiscordBot, msg: Message, song: Song) => {
         });
     } catch (e) {
         bot.logger("song.play", null, e);
-        queue.connection
+        queue.connection.disconnect()
     }
 }
 

@@ -1,4 +1,4 @@
-import { VoiceConnection, Message, Client, TextChannel, VoiceChannel, ReactionCollector } from "discord.js"
+import { VoiceConnection, Message, TextChannel, VoiceChannel, ReactionCollector } from "discord.js"
 
 import ytdl from 'ytdl-core-discord';
 import yts from "yt-search";
@@ -53,7 +53,7 @@ export class Song {
 export const run = async (bot: DiscordBot, msg: Message, song) => {
     let queue = bot.queues.get(msg.guild.id);
     if (!song) {
-        return cleanupQueue(bot, msg);
+        return cleanupQueue(bot, msg, msg.guild.id);
     }
     if (!queue) {
         try {
@@ -71,7 +71,7 @@ export const run = async (bot: DiscordBot, msg: Message, song) => {
             return msg.reply(`You need to join the voice channel <#${channel.id}> to hear the song.`);
         }
         queue.songs.push(song);
-        queue.textChannel.send({
+        msg.channel.send({
             embed: {
                 title: song.title,
                 fields: [
@@ -116,7 +116,7 @@ export const leave = async (bot: DiscordBot, msg: Message) => {
     const queue = bot.queues.get(msg.guild.id)
     if (!queue) return msg.reply("Sorry, there's not channel to leave");
     queue.connection.disconnect()
-    cleanupQueue(bot, msg);
+    cleanupQueue(bot, msg, msg.guild.id);
 }
 
 export const searchSong = async (bot: DiscordBot, msg: Message, content: string) => {
@@ -176,7 +176,7 @@ export const searchSong = async (bot: DiscordBot, msg: Message, content: string)
 
 export const playSong = async (bot: DiscordBot, msg: Message, song: Song) => {
     let queue = bot.queues.get(msg.guild.id);
-    if (!song) return cleanupQueue(bot, msg);
+    if (!song) return cleanupQueue(bot, msg, msg.guild.id);
     if (!queue) queue = await createQueue(bot, msg, song);
 
     if (!queue) return;
@@ -187,20 +187,22 @@ export const playSong = async (bot: DiscordBot, msg: Message, song: Song) => {
         let playCollector: ReactionCollector;
         let pauseCollector: ReactionCollector;
         let stopCollector: ReactionCollector;
+        let musicInfoEmbed: Message;
         dispatcher.on("finish", () => {
             queue.songs.shift();
             bot.queues.set(msg.guild.id, queue);
             playCollector.stop();
             pauseCollector.stop();
             stopCollector.stop();
+            musicInfoEmbed.reactions.removeAll();
             playSong(bot, msg, queue.songs[0]);
         })
         dispatcher.on("debug", (debug) => {
             bot.logger("song.debug", null, debug);
         });
-        dispatcher.on("start", () => {
+        dispatcher.on("start", async () => {
             bot.logger("song.play", null, `Playing song ${song.title}`)
-            queue.textChannel.send({
+            musicInfoEmbed = await msg.channel.send({
                 embed: {
                     title: song.title,
                     fields: [
@@ -217,22 +219,60 @@ export const playSong = async (bot: DiscordBot, msg: Message, song: Song) => {
                         icon_url: "https://cdn.discordapp.com/" + (bot.user.avatar !== null ? `avatars/${bot.user.id}/${bot.user.avatar}.png` : `embed/avatars/${Number(bot.user.discriminator) % 5}.png `)
                     }
                 }
-            }).then((embed: Message) => {
-                playCollector = embed.createReactionCollector((reaction, user) => reaction.emoji.name === "▶️" && !user.bot);
-                playCollector.on("collect", () => resume.run(bot, msg))
-                playCollector.on("dispose", () => resume.run(bot, msg))
-                embed.react("▶️");
-
-                pauseCollector = embed.createReactionCollector((reaction, user) => reaction.emoji.name === "⏸️" && !user.bot);
-                pauseCollector.on("collect", () => pause.run(bot, msg))
-                pauseCollector.on("dispose", () => pause.run(bot, msg))
-                embed.react("⏸️");
-
-                stopCollector = embed.createReactionCollector((reaction, user) => reaction.emoji.name === "⏹️" && !user.bot);
-                stopCollector.on("collect", () => stopSong.run(bot, msg))
-                stopCollector.on("dispose", () => stopSong.run(bot, msg))
-                embed.react("⏹️");
+            });
+            playCollector = musicInfoEmbed.createReactionCollector(
+                (reaction, user) => reaction.emoji.name === "▶️" && !user.bot);
+            playCollector.on("collect", () => {
+                const queue = bot.queues.get(msg.guild.id);
+                if (queue)
+                    resume.run(bot, msg)
+                else
+                    musicInfoEmbed.reactions.removeAll();
             })
+            playCollector.on("dispose", () => {
+                const queue = bot.queues.get(msg.guild.id);
+                if (queue)
+                    resume.run(bot, msg)
+                else
+                    musicInfoEmbed.reactions.removeAll();
+            });
+            musicInfoEmbed.react("▶️");
+
+            pauseCollector = musicInfoEmbed.createReactionCollector(
+                (reaction, user) => reaction.emoji.name === "⏸️" && !user.bot);
+            pauseCollector.on("collect", () => {
+                const queue = bot.queues.get(msg.guild.id);
+                if (queue)
+                    pause.run(bot, msg)
+                else
+                    musicInfoEmbed.reactions.removeAll();
+            })
+            pauseCollector.on("dispose", () => {
+                const queue = bot.queues.get(msg.guild.id);
+                if (queue)
+                    pause.run(bot, msg)
+                else
+                    musicInfoEmbed.reactions.removeAll();
+            })
+            musicInfoEmbed.react("⏸️");
+
+            stopCollector = musicInfoEmbed.createReactionCollector(
+                (reaction, user) => reaction.emoji.name === "⏹️" && !user.bot);
+            stopCollector.on("collect", () => {
+                const queue = bot.queues.get(msg.guild.id);
+                if (queue)
+                    stopSong.run(bot, msg)
+                else
+                    musicInfoEmbed.reactions.removeAll();
+            });
+            stopCollector.on("dispose", () => () => {
+                const queue = bot.queues.get(msg.guild.id);
+                if (queue)
+                    stopSong.run(bot, msg)
+                else
+                    musicInfoEmbed.reactions.removeAll();
+            });
+            musicInfoEmbed.react("⏹️");
         })
         dispatcher.on("error", (error) => {
             bot.logger("song.play", null, error);
@@ -269,12 +309,12 @@ export const createQueue = async (bot: DiscordBot, msg: Message, song: Song) => 
     }
 }
 
-export const cleanupQueue = async (bot: DiscordBot, msg: Message) => {
-    const queue = bot.queues.get(msg.guild.id);
+export const cleanupQueue = async (bot: DiscordBot, msg: Message, guildId: string) => {
+    const queue = bot.queues.get(guildId);
     if (!queue) {
-        return msg.reply("Sorry, there's no queue to be cleaned.");
+        return msg?.reply("Sorry, there's no queue to be cleaned.");
     }
-    if (queue.connection) queue.connection.disconnect()
+    queue.connection?.disconnect()
     bot.logger("queue.end")
-    bot.queues.delete(msg.guild.id);
+    bot.queues.delete(guildId);
 }

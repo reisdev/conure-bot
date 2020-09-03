@@ -3,6 +3,10 @@
   "version": "1.0.1",
   "description": "Conure Bot for Discord",
   "main": "dist/index.ts",
+  "license": "MIT",
+  "repository": {
+    "url": "https://github.com/reisdev/conure-bot.git"
+  },
   "scripts": {
     "dev": "nodemon",
     "build": "tsc",
@@ -20,10 +24,8 @@
     "fluent-ffmpeg": "^2.1.2",
     "moment": "^2.24.0",
     "opusscript": "0.0.7",
-    "twitch": "^4.0.10",
-    "twitch-webhooks": "^4.0.10",
     "typescript": "^3.8.3",
-    "yt-search": "^2.0.1",
+    "yt-search": "^2.3.0",
     "ytdl-core-discord": "^1.2.1"
   },
   "devDependencies": {
@@ -32,7 +34,7 @@
     "@babel/plugin-proposal-class-properties": "^7.8.3",
     "@babel/preset-env": "^7.9.0",
     "@babel/preset-typescript": "^7.9.0",
-    "nodemon": "^1.18.4"
+    "nodemon": "^2.0.4"
   },
   "engines": {
     "node": "14.2.0"

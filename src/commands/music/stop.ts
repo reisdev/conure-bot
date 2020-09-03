@@ -8,10 +8,8 @@ const run = async (bot: DiscordBot, msg: Message) => {
         return msg.reply("There's no song playing for your current channel.");
     }
     else {
-        if (queue.connection && queue.connection.dispatcher) {
-            bot.logger("song.stop", msg.member);
-            queue.connection.dispatcher.end();
-        }
+        bot.logger("song.stop", msg.member);
+        queue.connection?.dispatcher?.end();
     }
 }
 

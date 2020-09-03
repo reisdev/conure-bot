@@ -1,7 +1,7 @@
 import { Message } from "discord.js"
 
-import { DiscordBot } from "../..";
 import { playSong, cleanupQueue } from "../../utils/music";
+import { DiscordBot } from "../..";
 
 const run = async (bot: DiscordBot, msg: Message) => {
     let queue = bot.queues.get(msg.guild.id);
@@ -15,7 +15,7 @@ const run = async (bot: DiscordBot, msg: Message) => {
                 queue.songs.shift();
                 playSong(bot, msg, queue.songs[0]);
             } else {
-                cleanupQueue(bot, msg)
+                cleanupQueue(bot, msg, msg.guild.id);
                 throw Error("No song available");
             }
         } catch (e) {

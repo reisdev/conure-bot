@@ -1,6 +1,7 @@
-import { MessageEmbed, GuildMember, TextChannel } from "discord.js"
+import { MessageEmbed, GuildMember } from "discord.js"
+import { DiscordBot } from "..";
 
-const run = (member: GuildMember) => {
+export default (bot: DiscordBot, member: GuildMember) => {
     const welcomeEmbed = new MessageEmbed();
     welcomeEmbed.setColor(0xFFBE00)
         .setTitle(`${member.user.username}#${member.user.discriminator} chegou no nosso reino!`)
@@ -39,5 +40,3 @@ const run = (member: GuildMember) => {
 
     member.guild.systemChannel.send(`<@${member.id}>`, { embed: welcomeEmbed })
 }
-
-export default run

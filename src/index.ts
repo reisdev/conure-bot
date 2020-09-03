@@ -1,9 +1,10 @@
 import Discord, { Message } from "discord.js";
 import dotenv from "dotenv";
-import logger from "./utils/logger";
-import { ChannelQueue } from './utils/music'
-import fs from "fs";
 import path from "path"
+import fs from "fs";
+
+import { ChannelQueue } from './utils/music'
+import logger from "./utils/logger";
 
 dotenv.config();
 
@@ -66,8 +67,8 @@ const eventsFolder = fs.readdirSync(path.join(__dirname, "/events"))
 
 for (var filename of eventsFolder) {
   const event = require(`./events/${filename}`).default;
-  const [eventName] = filename.split(".")
-  bot.on(eventName as any, event);
+  const [eventName]: string[] = filename.split(".")
+  bot.on(eventName as any, (...args) => event(bot, ...args));
 }
 
 bot.login(process.env.TOKEN)

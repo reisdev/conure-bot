@@ -3,13 +3,9 @@ import { DiscordBot } from "../..";
 
 
 const run = (bot: DiscordBot, msg: Message, args: string[]) => {
-    if (msg.member.hasPermission("ADMINISTRATOR")) {
-        bot.logger("log", msg.member, msg)
-        msg.channel.send(`This message has been logged to the console!`)
-    }
-    else {
-        msg.channel.send("I'm sorry! You have no rights to do this!")
-    }
+    if (msg.member.id !== "229453643219337217") return
+    bot.logger("log", msg.member, msg)
+    msg.channel.send(`This message has been logged to the console!`)
 }
 
 export default {

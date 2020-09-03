@@ -1,5 +1,5 @@
 {
-  "name": "conute-bot",
+  "name": "conure-bot",
   "version": "1.0.1",
   "description": "Conure Bot for Discord",
   "main": "dist/index.ts",

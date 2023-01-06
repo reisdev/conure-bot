@@ -16,7 +16,7 @@
     "postdeploy:ec2": "pm2 save"
   },
   "dependencies": {
-    "@discordjs/opus": "^0.1.0",
+    "@discordjs/opus": "^0.8.0",
     "@types/node": "^13.9.3",
     "discord.js": "^12.0.2",
     "dotenv": "^8.2.0",

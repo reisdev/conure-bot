@@ -22,7 +22,7 @@
     "dotenv": "^8.2.0",
     "ffmpeg": "0.0.4",
     "fluent-ffmpeg": "^2.1.2",
-    "moment": "^2.24.0",
+    "moment": "^2.29.4",
     "opusscript": "0.0.7",
     "typescript": "^3.8.3",
     "yt-search": "^2.3.0",
